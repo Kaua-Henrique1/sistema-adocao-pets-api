@@ -1,4 +1,4 @@
-package domain;
+package devKaua.projeto.domain;
 
 import devKaua.projeto.application.PetService;
 

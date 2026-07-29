@@ -22,11 +22,13 @@ public class Pet {
     @Column(nullable = false, length = 100)
     private String nome;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private String tipo;
+    private TipoAnimal tipo;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
-    private String sexo;
+    private Sexo sexo;
 
     @Column(nullable = false, length = 50)
     private String raca;

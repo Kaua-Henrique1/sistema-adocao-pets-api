@@ -1,5 +1,7 @@
 package devKaua.projeto.dto;
 
+import devKaua.projeto.domain.Sexo;
+import devKaua.projeto.domain.TipoAnimal;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -15,11 +17,11 @@ public class PetRequestDTO {
     @Pattern(regexp = "^[A-Za-zÀ-ÿ]+(\\s+[A-Za-zÀ-ÿ]+)*$", message = "Nome inválido! Use apenas letras e espaços.")
     private String nome;
 
-    @NotBlank(message = "O tipo é obrigatório (Ex: CACHORRO, GATO).")
-    private String tipo;
+    @NotNull(message = "O tipo do animal é obrigatório (ex: CACHORRO, GATO).")
+    private TipoAnimal tipo;
 
-    @NotBlank(message = "O sexo é obrigatório (Ex: MACHO, FEMEA).")
-    private String sexo;
+    @NotNull(message = "O sexo é obrigatório (ex: MACHO, FEMEA).")
+    private Sexo sexo;
 
     @NotBlank(message = "A raça é obrigatória.")
     @Pattern(regexp = "^[a-zA-ZÀ-ÿ\\s]+$", message = "Raça inválida! Escreva apenas letras.")

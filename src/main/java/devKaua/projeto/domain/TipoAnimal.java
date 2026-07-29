@@ -1,4 +1,4 @@
-package domain;
+package devKaua.projeto.domain;
 
 public enum TipoAnimal {
     CACHORRO(1, "Cachorro"),

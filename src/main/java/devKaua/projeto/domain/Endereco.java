@@ -1,61 +1,27 @@
-package domain;
+package devKaua.projeto.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
+
+@Embeddable
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode
 public class Endereco {
 
     private static final String SEM_DADOS = "NÃO INFORMADO";
 
-    private final String rua;
-    private final String numero;
-    private final String cidade;
+    @Column(name = "logradouro", nullable = false, length = 150)
+    private String logradouro;
 
-    public Endereco(String rua, String numero, String cidade) {
-        if (rua == null || rua.isBlank()) {
-            throw new IllegalArgumentException("Rua é obrigatória.");
-        }
-        if (cidade == null || cidade.isBlank()) {
-            throw new IllegalArgumentException("Cidade é obrigatória.");
-        }
-        this.rua = rua;
-        this.cidade = cidade;
-        this.numero = (numero == null || numero.isEmpty()) ? SEM_DADOS : numero;
-    }
+    @Column(name = "numero", nullable = false, length = 20)
+    private String numero;
 
-    @Override
-    public String toString() {
-        return getRua() + ", " + getNumero() + " - " + getCidade();
-    }
-
-    public String toFormatado() {
-        return getRua() + ", " + getNumero() + ", " + getCidade();
-    }
-
-    public String getRua() {
-        return rua;
-    }
-
-    public String getNumero() {
-        return numero;
-    }
-
-    public String getCidade() {
-        return cidade;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Endereco endereco = (Endereco) o;
-        return rua.equals(endereco.rua)
-                && numero.equals(endereco.numero)
-                && cidade.equals(endereco.cidade);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = rua.hashCode();
-        result = 31 * result + numero.hashCode();
-        result = 31 * result + cidade.hashCode();
-        return result;
-    }
+    @Column(name = "cidade", nullable = false, length = 100)
+    private String cidade;
 }

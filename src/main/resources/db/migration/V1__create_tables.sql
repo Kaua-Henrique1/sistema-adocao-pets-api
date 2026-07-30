@@ -1,5 +1,5 @@
 -- 1. TABELA DE ADOTANTES
-CREATE TABLE adotantes
+CREATE TABLE IF NOT EXISTS adotantes
 (
     id         BIGSERIAL PRIMARY KEY,
     nome       VARCHAR(100) NOT NULL,
@@ -10,15 +10,16 @@ CREATE TABLE adotantes
     numero     VARCHAR(20)  NOT NULL,
     cidade     VARCHAR(100) NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL
-);
+    );
 
 -- Índices para otimização de busca rápida em memória/consultas
-CREATE INDEX idx_adotantes_cpf ON adotantes (cpf);
-CREATE INDEX idx_adotantes_nome ON adotantes (nome);
+CREATE INDEX IF NOT EXISTS idx_adotantes_cpf ON adotantes (cpf);
+CREATE INDEX IF NOT EXISTS idx_adotantes_nome ON adotantes (nome);
+CREATE INDEX IF NOT EXISTS idx_adotantes_nome_fts ON adotantes USING gin(to_tsvector('portuguese', nome));
 
 
 -- 2. TABELA DE PETS
-CREATE TABLE pets
+CREATE TABLE IF NOT EXISTS pets
 (
     id         BIGSERIAL PRIMARY KEY,
     nome       VARCHAR(100) NOT NULL,
@@ -34,18 +35,14 @@ CREATE TABLE pets
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
 
     -- CONSTRAINT DE CHAVE ESTRANGEIRA (FK)
-    -- Se id_tutor IS NULL  -> Pet está disponível para adoção
-    -- Se id_tutor IS NOT NULL -> Pet possui um Tutor (Adotante promovido)
-    -- ON DELETE SET NULL -> Se o Tutor for removido, o Pet volta a ficar sem tutor (disponível)
     CONSTRAINT fk_pets_tutor FOREIGN KEY (id_tutor)
-        REFERENCES adotantes (id)
-        ON DELETE SET NULL
-        ON UPDATE CASCADE
-);
+    REFERENCES adotantes (id)
+                         ON DELETE SET NULL
+                         ON UPDATE CASCADE
+    );
 
 -- Índices para consultas dinâmicas multi-critério
-CREATE INDEX idx_pets_nome ON pets (nome);
-CREATE INDEX idx_pets_tutor ON pets (id_tutor);
-CREATE INDEX idx_pets_cidade ON pets (cidade);
-CREATE INDEX idx_pets_nome_fts ON pets USING gin(to_tsvector('portuguese', nome));
-CREATE INDEX idx_pets_nome_fts ON adotantes USING gin(to_tsvector('portuguese', nome));
+CREATE INDEX IF NOT EXISTS idx_pets_nome ON pets (nome);
+CREATE INDEX IF NOT EXISTS idx_pets_tutor ON pets (id_tutor);
+CREATE INDEX IF NOT EXISTS idx_pets_cidade ON pets (cidade);
+CREATE INDEX IF NOT EXISTS idx_pets_nome_fts ON pets USING gin(to_tsvector('portuguese', nome));

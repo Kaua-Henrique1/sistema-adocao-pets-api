@@ -1,0 +1,35 @@
+<h2>Login - ONG Pets Admin</h2>
+
+<form (ngSubmit)="onSubmit()">
+  <div>
+    <label for="login">Usuário/Login:</label>
+    <input 
+      type="text" 
+      id="login" 
+      name="login" 
+      [(ngModel)]="credentials.login" 
+      required
+    >
+  </div>
+
+  <br>
+
+  <div>
+    <label for="senha">Senha:</label>
+    <input 
+      type="password" 
+      id="senha" 
+      name="senha" 
+      [(ngModel)]="credentials.senha" 
+      required
+    >
+  </div>
+
+  <br>
+
+  <button type="submit">Entrar</button>
+</form>
+
+<p *ngIf="errorMessage" style="color: red;">
+  {{ errorMessage }}
+</p>

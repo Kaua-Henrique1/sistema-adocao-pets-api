@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS adotantes
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL
     );
 
--- Índices para otimização de busca rápida em memória/consultas
+-- Índices para otimização de busca
 CREATE INDEX IF NOT EXISTS idx_adotantes_cpf ON adotantes (cpf);
 CREATE INDEX IF NOT EXISTS idx_adotantes_nome ON adotantes (nome);
 CREATE INDEX IF NOT EXISTS idx_adotantes_nome_fts ON adotantes USING gin(to_tsvector('portuguese', nome));
@@ -29,20 +29,27 @@ CREATE TABLE IF NOT EXISTS pets
     idade      VARCHAR(20)  NOT NULL,
     peso       VARCHAR(20)  NOT NULL,
     id_tutor   BIGINT,
-    logradouro VARCHAR(150) NOT NULL, -- Endereço do local de acolhimento do pet
+    logradouro VARCHAR(150) NOT NULL,
     numero     VARCHAR(20)  NOT NULL,
     cidade     VARCHAR(100) NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
 
-    -- CONSTRAINT DE CHAVE ESTRANGEIRA (FK)
     CONSTRAINT fk_pets_tutor FOREIGN KEY (id_tutor)
     REFERENCES adotantes (id)
                          ON DELETE SET NULL
                          ON UPDATE CASCADE
     );
 
--- Índices para consultas dinâmicas multi-critério
 CREATE INDEX IF NOT EXISTS idx_pets_nome ON pets (nome);
 CREATE INDEX IF NOT EXISTS idx_pets_tutor ON pets (id_tutor);
 CREATE INDEX IF NOT EXISTS idx_pets_cidade ON pets (cidade);
 CREATE INDEX IF NOT EXISTS idx_pets_nome_fts ON pets USING gin(to_tsvector('portuguese', nome));
+
+
+-- 3. TABELA DE USUÁRIOS
+CREATE TABLE IF NOT EXISTS tb_usuario (
+    id BIGSERIAL PRIMARY KEY UNIQUE NOT NULL,
+    login VARCHAR(50) NOT NULL UNIQUE,
+    senha VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'ROLE_FUNCIONARIO'
+    );

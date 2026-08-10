@@ -26,8 +26,8 @@ CREATE TABLE IF NOT EXISTS pets
     tipo       VARCHAR(30)  NOT NULL,
     sexo       VARCHAR(10)  NOT NULL,
     raca       VARCHAR(50)  NOT NULL,
-    idade      VARCHAR(20)  NOT NULL,
-    peso       VARCHAR(20)  NOT NULL,
+    idade      DOUBLE PRECISION NOT NULL,
+    peso       DOUBLE PRECISION NOT NULL,
     id_tutor   BIGINT,
     logradouro VARCHAR(150) NOT NULL,
     numero     VARCHAR(20)  NOT NULL,
@@ -48,8 +48,8 @@ CREATE INDEX IF NOT EXISTS idx_pets_nome_fts ON pets USING gin(to_tsvector('port
 
 -- 3. TABELA DE USUÁRIOS
 CREATE TABLE IF NOT EXISTS tb_usuario (
-    id BIGSERIAL PRIMARY KEY UNIQUE NOT NULL,
-    login VARCHAR(50) NOT NULL UNIQUE,
+                                          id BIGSERIAL PRIMARY KEY UNIQUE NOT NULL,
+                                          login VARCHAR(50) NOT NULL UNIQUE,
     senha VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL DEFAULT 'ROLE_FUNCIONARIO'
     );

@@ -52,4 +52,12 @@ public class SecurityFilter extends OncePerRequestFilter {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
         return authHeader.replace("Bearer ", "");
     }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        return path.startsWith("/api-docs")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui");
+    }
 }

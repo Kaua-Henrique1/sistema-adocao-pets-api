@@ -4,3 +4,4 @@
 **/.angular/
 .idea/
 **/.vscode/
+target/

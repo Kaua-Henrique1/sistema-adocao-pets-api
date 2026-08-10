@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import java.util.List;
 @RequestMapping("/api/v1/pets")
 @RequiredArgsConstructor
 @Tag(name = "Pets", description = "Endpoints para gerenciamento do cadastro e fluxo de adoção de pets")
+@SecurityRequirement(name = "bearer-key")
 public class PetController {
 
     private final PetService petService;
@@ -30,7 +32,8 @@ public class PetController {
     @Operation(summary = "Cadastrar novo pet", description = "Registra um novo pet disponível para adoção no sistema.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Pet cadastrado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos")
+            @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado / Token JWT inválido ou ausente")
     })
     @PostMapping
     public ResponseEntity<PetResponseDTO> cadastrar(@RequestBody @Valid PetRequestDTO dto) {
@@ -41,7 +44,8 @@ public class PetController {
     @Operation(summary = "Buscar pet por ID", description = "Retorna as informações detalhadas de um pet específico pelo ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Pet encontrado"),
-            @ApiResponse(responseCode = "404", description = "Pet não encontrado")
+            @ApiResponse(responseCode = "404", description = "Pet não encontrado"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado / Token JWT inválido ou ausente")
     })
     @GetMapping("/{id}")
     public ResponseEntity<PetResponseDTO> buscarPorId(

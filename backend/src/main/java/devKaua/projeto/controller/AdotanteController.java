@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/adotantes")
 @RequiredArgsConstructor
 @Tag(name = "Adotantes", description = "Endpoints para gerenciamento do cadastro de adotantes")
+@SecurityRequirement(name = "bearer-key")
 public class AdotanteController {
 
     private final AdotanteService adotanteService;
@@ -28,7 +30,8 @@ public class AdotanteController {
     @Operation(summary = "Cadastrar novo adotante", description = "Registra um novo adotante no sistema com validação de dados.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Adotante cadastrado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos (falha de validação)")
+            @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos (falha de validação)"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado / Token JWT inválido ou ausente")
     })
     @PostMapping
     public ResponseEntity<AdotanteResponseDTO> cadastrar(@RequestBody @Valid AdotanteRequestDTO dto) {

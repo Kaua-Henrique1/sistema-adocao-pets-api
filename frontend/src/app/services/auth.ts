@@ -13,21 +13,24 @@ export interface LoginCredentials {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private http = inject(HttpClient);
-  
-  private apiUrl = `${environment.apiUrl}/pets`;
+  private apiUrl = `${environment.apiUrl}/auth`;
 
   login(credentials: LoginCredentials): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(this.apiUrl, credentials).pipe(
-      tap(response => {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, credentials).pipe(
+      tap((response) => {
         if (response.token) {
           localStorage.setItem('token', response.token);
         }
-      })
+      }),
     );
+  }
+
+  register(userData: any): Observable<string> {
+    return this.http.post<string>(`${this.apiUrl}/register`, userData);
   }
 
   getToken(): string | null {

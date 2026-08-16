@@ -1,35 +1,41 @@
-<h2>Login - ONG Pets Admin</h2>
+<div class="login-container">
+  <h2>Acesso ao Sistema</h2>
 
-<form (ngSubmit)="onSubmit()">
-  <div>
-    <label for="login">Usuário/Login:</label>
-    <input 
-      type="text" 
-      id="login" 
-      name="login" 
-      [(ngModel)]="credentials.login" 
-      required
-    >
-  </div>
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
 
-  <br>
+    <div class="form-group">
+      <label for="login">Usuário / E-mail</label>
+      <input
+        id="login"
+        type="text"
+        formControlName="login"
+        placeholder="Digite seu login"
+      />
+      <small class="error" *ngIf="loginForm.get('login')?.touched && loginForm.get('login')?.invalid">
+        O campo login é obrigatório.
+      </small>
+    </div>
 
-  <div>
-    <label for="senha">Senha:</label>
-    <input 
-      type="password" 
-      id="senha" 
-      name="senha" 
-      [(ngModel)]="credentials.senha" 
-      required
-    >
-  </div>
+    <div class="form-group">
+      <label for="senha">Senha</label>
+      <input
+        id="senha"
+        type="password"
+        formControlName="senha"
+        placeholder="Digite sua senha"
+      />
+      <small class="error" *ngIf="loginForm.get('senha')?.touched && loginForm.get('senha')?.invalid">
+        A senha deve ter pelo menos 6 caracteres.
+      </small>
+    </div>
 
-  <br>
+    <div class="alert-error" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
 
-  <button type="submit">Entrar</button>
-</form>
+    <button type="submit" [disabled]="loginForm.invalid || isLoading">
+      {{ isLoading ? 'Entrando...' : 'Entrar' }}
+    </button>
 
-<p *ngIf="errorMessage" style="color: red;">
-  {{ errorMessage }}
-</p>
+  </form>
+</div>

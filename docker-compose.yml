@@ -28,7 +28,6 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Sobrescreve o host do banco para apontar para o container postgres-db
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/ong_pets_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: senha123
@@ -36,8 +35,18 @@ services:
       SPRING_FLYWAY_LOCATIONS: "classpath:db/migration"
     depends_on:
       postgres-db:
-        condition: service_healthy   # Espera o banco estar 100% operacional antes de subir o Spring
+        condition: service_healthy
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ong_pets_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
 volumes:
   pgdata:
     driver: local

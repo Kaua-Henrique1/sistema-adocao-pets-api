@@ -1,24 +1,35 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Pet } from '../models/pet.model';
 import { environment } from '../../environments/environment';
+import { PetRequest, PetResponse } from '../models/domain.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PetService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/pets`;
-  listarTodos(): Observable<Pet[]> {
-    return this.http.get<Pet[]>(this.apiUrl);
+  private apiUrl = `${environment.apiUrl}/api/v1/pets`;
+
+  cadastrar(pet: PetRequest): Observable<PetResponse> {
+    return this.http.post<PetResponse>(this.apiUrl, pet);
   }
 
-  buscarPorId(id: number): Observable<Pet> {
-    return this.http.get<Pet>(`${this.apiUrl}/${id}`);
+  buscarPorId(id: number): Observable<PetResponse> {
+    return this.http.get<PetResponse>(`${this.apiUrl}/${id}`);
   }
 
-  cadastrar(pet: Pet): Observable<Pet> {
-    return this.http.post<Pet>(this.apiUrl, pet);
+  listarDisponiveis(page: number = 0, size: number = 10): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/disponiveis?page=${page}&size=${size}`);
+  }
+
+  listarPorCidade(cidade: string, page: number = 0, size: number = 10): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/cidade/${cidade}?page=${page}&size=${size}`);
+  }
+
+  adotar(petId: number, adotanteId: number): Observable<PetResponse> {
+    return this.http.patch<PetResponse>(`${this.apiUrl}/${petId}/adotar`, null, {
+      params: { adotanteId: adotanteId.toString() },
+    });
   }
 }

@@ -1,1 +1,39 @@
-<p>home works!</p>
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Painel de Controle - ONG Pets</h1>
+    <p>Gerencie os animais, adotantes e processos de adoção em um só lugar.</p>
+  </header>
+
+  <!-- Métricas Rápidas -->
+  <section class="stats-grid">
+    <div class="stat-card">
+      <h3>{{ stats.totalPets }}</h3>
+      <p>Pets Cadastrados</p>
+    </div>
+    <div class="stat-card">
+      <h3>{{ stats.totalAdotantes }}</h3>
+      <p>Adotantes Registrados</p>
+    </div>
+    <div class="stat-card highlight">
+      <h3>{{ stats.adocoesMes }}</h3>
+      <p>Adoções este Mês</p>
+    </div>
+  </section>
+
+  <!-- Módulos Principais (Atalhos de Gerenciamento) -->
+  <section class="modules-grid">
+    <div class="module-card" (click)="navegarPara('/pets')">
+      <div class="icon">🐶</div>
+      <h2>Gerenciar Pets</h2>
+      <p>Cadastre novos animais, altere status de disponibilidade e edite informações.</p>
+      <button class="btn-primary">Acessar Pets</button>
+    </div>
+
+    <div class="module-card" (click)="navegarPara('/pessoas')">
+      <div class="icon">👤</div>
+      <h2>Gerenciar Adotantes</h2>
+      <p>Visualize cadastros de adotantes, contatos e histórico de adoções.</p>
+      <button class="btn-primary">Acessar Adotantes</button>
+    </div>
+  </section>
+</div>

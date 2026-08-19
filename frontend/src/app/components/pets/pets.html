@@ -1,1 +1,104 @@
-<p>pets works!</p>
+<div class="container">
+  <header class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>Encontre um Pet</h2>
+    <button class="btn-secondary" routerLink="/home">← Voltar ao Home</button>
+  </header>
+
+  <!-- Painel de Filtros -->
+  <div class="filters-card">
+    <div class="filter-group">
+      <label>Buscar por ID:</label>
+      <div class="input-action">
+        <input type="number" [(ngModel)]="termoId" placeholder="Ex: 1" />
+        <button class="btn-primary" (click)="buscarPorId()">Buscar</button>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label>Buscar por Cidade:</label>
+      <div class="input-action">
+        <input type="text" [(ngModel)]="termoCidade" placeholder="Ex: Parnamirim" />
+        <button class="btn-primary" (click)="buscarPorCidade(0)">Filtrar</button>
+      </div>
+    </div>
+
+    <div class="filter-group reset-group">
+      <button class="btn-secondary" (click)="carregarDisponiveis(0)">Ver Todos Disponíveis</button>
+    </div>
+  </div>
+
+  <!-- Feedback do sistema -->
+  @if (carregando) {
+    <p class="loading">Buscando pets...</p>
+  }
+
+  @if (mensagemErro) {
+    <p class="alert error">{{ mensagemErro }}</p>
+  }
+
+  <!-- Lista de Pets em Cards -->
+  @if (!carregando && !mensagemErro) {
+    <div class="pets-grid">
+      @for (pet of pets; track pet.id) {
+        <div class="pet-card">
+          <div class="pet-header">
+            <h3>{{ pet.nome }}</h3>
+            <span class="badge" [class.gato]="pet.tipo === 'GATO'">{{ pet.tipo }}</span>
+          </div>
+          <div class="pet-body">
+            <p><strong>Raça:</strong> {{ pet.raca }}</p>
+            <p><strong>Sexo:</strong> {{ pet.sexo }}</p>
+            <p><strong>Idade:</strong> {{ pet.idade }} anos</p>
+            <p><strong>Peso:</strong> {{ pet.peso }} kg</p>
+          </div>
+          <div class="pet-footer">
+            <small>📍 {{ pet.endereco?.cidade || 'N/A' }} - {{ pet.endereco?.logradouro || 'N/A' }}</small>
+            <button class="btn-success action-btn">Adotar</button>
+          </div>
+        </div>
+      } @empty {
+        <p class="text-center">Nenhum pet encontrado com os filtros informados.</p>
+      }
+    </div>
+
+    <!-- Controles de Paginação -->
+    @if (totalPaginas > 1) {
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px; background: #f8f9fa; padding: 12px 20px; border-radius: 8px;">
+        <small>
+          Exibindo página <strong>{{ paginaAtual + 1 }}</strong> de <strong>{{ totalPaginas }}</strong>
+          (Total: {{ totalElementos }} pets)
+        </small>
+
+        <div style="display: flex; gap: 6px;">
+          <!-- Botão Anterior -->
+          <button
+            class="btn-secondary"
+            (click)="termoCidade ? buscarPorCidade(paginaAtual - 1) : carregarDisponiveis(paginaAtual - 1)"
+            [disabled]="paginaAtual === 0">
+            &laquo; Anterior
+          </button>
+
+          <!-- Botões Numéricos de Página -->
+          @for (p of [].constructor(totalPaginas); track $index) {
+            <button
+              class="btn-secondary"
+              (click)="termoCidade ? buscarPorCidade($index) : carregarDisponiveis($index)"
+              [style.font-weight]="$index === paginaAtual ? 'bold' : 'normal'"
+              [style.background-color]="$index === paginaAtual ? '#007bff' : ''"
+              [style.color]="$index === paginaAtual ? '#fff' : ''">
+              {{ $index + 1 }}
+            </button>
+          }
+
+          <!-- Botão Próximo -->
+          <button
+            class="btn-secondary"
+            (click)="termoCidade ? buscarPorCidade(paginaAtual + 1) : carregarDisponiveis(paginaAtual + 1)"
+            [disabled]="paginaAtual >= totalPaginas - 1">
+            Próximo &raquo;
+          </button>
+        </div>
+      </div>
+    }
+  }
+</div>

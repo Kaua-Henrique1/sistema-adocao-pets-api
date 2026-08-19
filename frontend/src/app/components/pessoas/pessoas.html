@@ -1,1 +1,80 @@
-<p>pessoas works!</p>
+<header class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+  <h2>Gerenciamento de Adotantes</h2>
+  <button class="btn-secondary" routerLink="/home">← Voltar ao Home</button>
+</header>
+<!-- Exibe a tabela quando não estiver carregando -->
+@if (true) {
+  <table class="table">
+    <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nome</th>
+      <th>CPF</th>
+      <th>Contato</th>
+      <th>Cidade</th>
+      <th>Ações</th>
+    </tr>
+    </thead>
+    <tbody>
+      @for (a of adotantes; track a.id) {
+        <tr>
+          <td>#{{ a.id }}</td>
+          <td>{{ a.nome }}</td>
+          <td>{{ a.cpf }}</td>
+          <td>
+            {{ a.telefone }}<br />
+            <small>{{ a.email }}</small>
+          </td>
+          <!-- Ponto de interrogação ?. para evitar falha no template -->
+          <td>{{ a.endereco?.cidade || 'N/A' }}</td>
+          <td>
+            <button (click)="editar(a)">Editar</button>
+            <button (click)="deletar(a.id)">Remover</button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6" style="text-align: center;">Nenhum adotante cadastrado.</td>
+        </tr>
+      }
+
+    <!-- Controles de Paginação -->
+      @if (totalPaginas > 1) {
+        <div style="display: flex; justify: space-between; align-items: center; margin-top: 15px;">
+
+          <small>
+            Exibindo página <strong>{{ paginaAtual + 1 }}</strong> de <strong>{{ totalPaginas }}</strong>
+            (Total: {{ totalElementos }} registros)
+          </small>
+
+          <div style="display: flex; gap: 5px;">
+            <!-- Botão Anterior -->
+            <button
+              (click)="paginaAnterior()"
+              [disabled]="paginaAtual === 0">
+              &laquo; Anterior
+            </button>
+
+            <!-- Botões Numéricos de Página -->
+            @for (p of [].constructor(totalPaginas); track $index) {
+              <button
+                (click)="irParaPagina($index)"
+                [style.font-weight]="$index === paginaAtual ? 'bold' : 'normal'"
+                [style.background-color]="$index === paginaAtual ? '#ddd' : ''">
+                {{ $index + 1 }}
+              </button>
+            }
+
+            <!-- Botão Próximo -->
+            <button
+              (click)="proximaPagina()"
+              [disabled]="paginaAtual >= totalPaginas - 1">
+              Próximo &raquo;
+            </button>
+          </div>
+
+        </div>
+      }
+    </tbody>
+  </table>
+}

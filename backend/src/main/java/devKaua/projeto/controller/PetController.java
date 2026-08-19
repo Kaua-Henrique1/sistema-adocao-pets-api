@@ -18,8 +18,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/v1/pets")
 @RequiredArgsConstructor
@@ -54,12 +52,13 @@ public class PetController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Listar pets disponíveis", description = "Retorna todos os pets que ainda estão com status de disponíveis para adoção.")
-    @ApiResponse(responseCode = "200", description = "Lista de pets disponíveis obtida com sucesso")
+    @Operation(summary = "Listar pets disponíveis", description = "Retorna de forma paginada todos os pets que ainda estão com status de disponíveis para adoção.")
+    @ApiResponse(responseCode = "200", description = "Página de pets disponíveis obtida com sucesso")
     @GetMapping("/disponiveis")
-    public ResponseEntity<List<PetResponseDTO>> listarDisponiveis() {
-        List<PetResponseDTO> disponiveis = petService.listarDisponiveis();
-        return ResponseEntity.ok(disponiveis);
+    public ResponseEntity<Page<PetResponseDTO>> listarDisponiveis(
+            @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
+        Page<PetResponseDTO> page = petService.listarDisponiveis(pageable);
+        return ResponseEntity.ok(page);
     }
 
     @Operation(summary = "Listar pets por cidade", description = "Filtra e retorna os pets cadastrados em uma determinada cidade com paginação.")
@@ -84,5 +83,30 @@ public class PetController {
             @Parameter(description = "ID do adotante", example = "2") @RequestParam Long adotanteId) {
         PetResponseDTO response = petService.adotarPet(petId, adotanteId);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Atualizar dados do pet", description = "Atualiza as informações de um pet existente (nome, peso, raça, etc).")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Pet atualizado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Pet não encontrado")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<PetResponseDTO> atualizar(
+            @Parameter(description = "ID do pet a ser atualizado", example = "1") @PathVariable Long id,
+            @RequestBody @Valid PetRequestDTO dto) {
+        PetResponseDTO response = petService.atualizar(id, dto);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Remover pet", description = "Exclui um pet do sistema através do seu ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Pet removido com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Pet não encontrado")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> remover(
+            @Parameter(description = "ID do pet", example = "1") @PathVariable Long id) {
+        petService.remover(id);
+        return ResponseEntity.noContent().build(); // Retorna 204 No Content
     }
 }

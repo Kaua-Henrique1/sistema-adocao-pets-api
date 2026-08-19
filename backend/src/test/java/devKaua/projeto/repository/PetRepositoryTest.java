@@ -24,7 +24,6 @@ class PetRepositoryTest {
     @Autowired
     private TestEntityManager entityManager;
 
-    // --- TESTES PARA: findByTutorIsNull() ---
 
     @Test
     @DisplayName("Sucesso: Deve retornar pets que não possuem tutor (disponíveis)")
@@ -32,10 +31,10 @@ class PetRepositoryTest {
         Pet petDisponivel = criarPet("Bolinha", "Natal");
         entityManager.persist(petDisponivel);
 
-        List<Pet> encontrados = petRepository.findByTutorIsNull();
+        Page<Pet> paginaEncontrada = petRepository.findByTutorIsNull(PageRequest.of(0, 10));
 
-        assertThat(encontrados).isNotEmpty();
-        assertThat(encontrados.get(0).getNome()).isEqualTo("Bolinha");
+        assertThat(paginaEncontrada.getContent()).isNotEmpty();
+        assertThat(paginaEncontrada.getContent().get(0).getNome()).isEqualTo("Bolinha");
     }
 
     @Test
@@ -48,9 +47,9 @@ class PetRepositoryTest {
         petAdotado.setTutor(tutor); // Vinculando ao tutor
         entityManager.persist(petAdotado);
 
-        List<Pet> encontrados = petRepository.findByTutorIsNull();
+        Page<Pet> paginaEncontrada = petRepository.findByTutorIsNull(PageRequest.of(0, 10));
 
-        assertThat(encontrados).isEmpty();
+        assertThat(paginaEncontrada.getContent()).isEmpty();
     }
 
     // --- TESTES PARA: findByTutorId(Long tutorId) ---
@@ -59,7 +58,7 @@ class PetRepositoryTest {
     @DisplayName("Sucesso: Deve retornar todos os pets de um tutor específico")
     void deveRetornarPetsDoTutorEspecifico() {
         Adotante tutor = criarAdotante();
-        entityManager.persist(tutor); 
+        entityManager.persist(tutor);
 
         Pet pet1 = criarPet("Rex", "Natal");
         pet1.setTutor(tutor);

@@ -2,6 +2,7 @@ package devKaua.projeto.service;
 
 import devKaua.projeto.domain.Adotante;
 import devKaua.projeto.domain.Pet;
+import devKaua.projeto.dto.PetRequestDTO;
 import devKaua.projeto.dto.PetResponseDTO;
 import devKaua.projeto.exception.BusinessException;
 import devKaua.projeto.exception.ResourceNotFoundException;
@@ -16,6 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -122,18 +127,78 @@ class PetServiceTest {
     class ListarDisponiveis {
 
         @Test
-        @DisplayName("Sucesso: Deve retornar lista de pets sem tutor")
+        @DisplayName("Sucesso: Deve retornar página de pets sem tutor")
         void deveListarPetsDisponiveis() {
             Pet pet = new Pet();
             PetResponseDTO dto = new PetResponseDTO();
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Pet> pagePets = new PageImpl<>(List.of(pet));
 
-            when(petRepository.findByTutorIsNull()).thenReturn(List.of(pet));
+            when(petRepository.findByTutorIsNull(pageable)).thenReturn(pagePets);
             when(petMapper.toDTO(pet)).thenReturn(dto);
 
-            List<PetResponseDTO> resultado = petService.listarDisponiveis();
+            Page<PetResponseDTO> resultado = petService.listarDisponiveis(pageable);
 
-            assertThat(resultado).hasSize(1);
-            verify(petRepository).findByTutorIsNull();
+            assertThat(resultado.getContent()).hasSize(1);
+            verify(petRepository).findByTutorIsNull(pageable);
+        }
+    }
+
+    @Nested
+    @DisplayName("Testes de Atualização e Remoção de Pet")
+    class AtualizarERemover {
+
+        @Test
+        @DisplayName("Sucesso: Deve atualizar os dados do pet com sucesso")
+        void deveAtualizarPetComSucesso() {
+            Long petId = 1L;
+            Pet petExistente = new Pet();
+            petExistente.setNome("Nome Antigo");
+            petExistente.setPeso(5.0);
+
+            PetRequestDTO requestDTO = new PetRequestDTO();
+            requestDTO.setNome("Nome Novo");
+            requestDTO.setPeso(7.5);
+
+            Pet petAtualizado = new Pet();
+            PetResponseDTO responseDTO = new PetResponseDTO();
+
+            when(petRepository.findById(petId)).thenReturn(Optional.of(petExistente));
+            when(petRepository.save(petExistente)).thenReturn(petAtualizado);
+            when(petMapper.toDTO(petAtualizado)).thenReturn(responseDTO);
+
+            PetResponseDTO resultado = petService.atualizar(petId, requestDTO);
+
+            assertThat(resultado).isNotNull();
+            assertThat(petExistente.getNome()).isEqualTo("Nome Novo");
+            assertThat(petExistente.getPeso()).isEqualTo(7.5);
+            verify(petRepository).save(petExistente);
+        }
+
+        @Test
+        @DisplayName("Sucesso: Deve remover pet existente")
+        void deveRemoverPetComSucesso() {
+            Long petId = 1L;
+
+            when(petRepository.existsById(petId)).thenReturn(true);
+
+            petService.remover(petId);
+
+            verify(petRepository).deleteById(petId);
+        }
+
+        @Test
+        @DisplayName("Exceção: Deve lançar erro ao tentar remover pet inexistente")
+        void deveLancarExcecaoAoRemoverPetInexistente() {
+            Long petId = 99L;
+
+            when(petRepository.existsById(petId)).thenReturn(false);
+
+            assertThatThrownBy(() -> petService.remover(petId))
+                    .isInstanceOf(ResourceNotFoundException.class)
+                    .hasMessageContaining("Pet não encontrado");
+
+            verify(petRepository, never()).deleteById(any());
         }
     }
 }

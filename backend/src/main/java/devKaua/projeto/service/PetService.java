@@ -16,8 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class PetService {
@@ -41,12 +39,11 @@ public class PetService {
         return petMapper.toDTO(pet);
     }
 
+    // CORRIGIDO: Agora recebe Pageable e retorna Page
     @Transactional(readOnly = true)
-    public List<PetResponseDTO> listarDisponiveis() {
-        return petRepository.findByTutorIsNull()
-                .stream()
-                .map(petMapper::toDTO)
-                .toList();
+    public Page<PetResponseDTO> listarDisponiveis(Pageable pageable) {
+        return petRepository.findByTutorIsNull(pageable)
+                .map(petMapper::toDTO);
     }
 
     @Transactional(readOnly = true)
@@ -67,10 +64,29 @@ public class PetService {
         Adotante adotante = adotanteRepository.findById(adotanteId)
                 .orElseThrow(() -> new ResourceNotFoundException("Adotante não encontrado com o ID: " + adotanteId));
 
-        // Vincula o pet ao adotante
         pet.setTutor(adotante);
 
         Pet petAdotado = petRepository.save(pet);
         return petMapper.toDTO(petAdotado);
+    }
+
+    @Transactional
+    public PetResponseDTO atualizar(Long id, PetRequestDTO dto) {
+        Pet pet = petRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet não encontrado com o ID: " + id));
+
+        pet.setNome(dto.getNome());
+        pet.setPeso(dto.getPeso());
+
+        Pet petAtualizado = petRepository.save(pet);
+        return petMapper.toDTO(petAtualizado);
+    }
+
+    @Transactional
+    public void remover(Long id) {
+        if (!petRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Pet não encontrado com o ID: " + id);
+        }
+        petRepository.deleteById(id);
     }
 }

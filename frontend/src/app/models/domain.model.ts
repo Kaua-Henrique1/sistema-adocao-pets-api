@@ -9,7 +9,7 @@ export interface PetRequest {
   tipo: 'CACHORRO' | 'GATO';
   sexo: 'MACHO' | 'FEMEA';
   raca: string;
-  idade: number;
+  dataNascimento: string;
   peso: number;
   endereco: Endereco;
 }
@@ -20,7 +20,7 @@ export interface PetResponse {
   tipo: 'CACHORRO' | 'GATO';
   sexo: 'MACHO' | 'FEMEA';
   raca: string;
-  idade: number;
+  dataNascimento: string;
   peso: number;
   tutorId?: number | null;
   tutorNome?: string | null;

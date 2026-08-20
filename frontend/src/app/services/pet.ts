@@ -27,6 +27,14 @@ export class PetService {
     return this.http.get<any>(`${this.apiUrl}/cidade/${cidade}?page=${page}&size=${size}`);
   }
 
+  atualizar(id: number, pet: PetRequest): Observable<PetResponse> {
+    return this.http.put<PetResponse>(`${this.apiUrl}/${id}`, pet);
+  }
+
+  deletar(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
   adotar(petId: number, adotanteId: number): Observable<PetResponse> {
     return this.http.patch<PetResponse>(`${this.apiUrl}/${petId}/adotar`, null, {
       params: { adotanteId: adotanteId.toString() },

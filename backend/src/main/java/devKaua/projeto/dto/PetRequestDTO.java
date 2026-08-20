@@ -8,6 +8,7 @@ import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -15,6 +16,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -67,14 +70,13 @@ public class PetRequestDTO {
     private String raca;
 
     @Schema(
-            description = "Idade do pet em anos. Regras: Obrigatório, valor decimal entre 0.1 (aprox. 1 mês) e 60.0 anos.",
-            example = "0.5",
+            description = "Data de nascimento do pet. Regras: Obrigatório, formato ISO (YYYY-MM-DD), não pode ser uma data futura.",
+            example = "2021-05-15",
             requiredMode = Schema.RequiredMode.REQUIRED
     )
-    @NotNull(message = "A idade é obrigatória.")
-    @DecimalMin(value = "0.1", message = "Idade inválida! Mínimo de 0.1 ano.")
-    @DecimalMax(value = "60.0", message = "Idade inválida! Máximo de 60 anos.")
-    private Double idade;
+    @NotNull(message = "A data de nascimento é obrigatória.")
+    @PastOrPresent(message = "A data de nascimento não pode ser uma data futura.")
+    private LocalDate dataNascimento;
 
     @Schema(
             description = "Peso do pet em quilos. Regras: Obrigatório, valor decimal entre 0.5 kg e 60.0 kg.",

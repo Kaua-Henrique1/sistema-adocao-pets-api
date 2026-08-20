@@ -21,7 +21,7 @@ public class PetMapper {
                 .tipo(dto.getTipo())
                 .sexo(dto.getSexo())
                 .raca(dto.getRaca())
-                .idade(dto.getIdade())
+                .dataNascimento(dto.getDataNascimento())
                 .peso(dto.getPeso())
                 .endereco(enderecoMapper.toEntity(dto.getEndereco()))
                 .build();
@@ -41,7 +41,7 @@ public class PetMapper {
                 .tipo(entity.getTipo())
                 .sexo(entity.getSexo())
                 .raca(entity.getRaca())
-                .idade(entity.getIdade())
+                .dataNascimento(entity.getDataNascimento())
                 .peso(entity.getPeso())
                 .tutorId(tutorId)
                 .tutorNome(tutorNome)

@@ -3,6 +3,7 @@ package devKaua.projeto.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -23,18 +24,18 @@ public class Pet {
     private String nome;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false, length = 30, updatable = false)
     private TipoAnimal tipo;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
+    @Column(nullable = false, length = 10, updatable = false)
     private Sexo sexo;
 
     @Column(nullable = false, length = 50)
     private String raca;
 
-    @Column(nullable = false)
-    private Double idade;
+    @Column(name = "data_nascimento", nullable = false)
+    private LocalDate dataNascimento;
 
     @Column(nullable = false)
     private Double peso;

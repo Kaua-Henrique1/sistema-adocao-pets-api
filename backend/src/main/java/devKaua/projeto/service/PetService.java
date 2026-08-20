@@ -1,6 +1,7 @@
 package devKaua.projeto.service;
 
 import devKaua.projeto.domain.Adotante;
+import devKaua.projeto.domain.Endereco;
 import devKaua.projeto.domain.Pet;
 import devKaua.projeto.dto.PetRequestDTO;
 import devKaua.projeto.dto.PetResponseDTO;
@@ -39,7 +40,6 @@ public class PetService {
         return petMapper.toDTO(pet);
     }
 
-    // CORRIGIDO: Agora recebe Pageable e retorna Page
     @Transactional(readOnly = true)
     public Page<PetResponseDTO> listarDisponiveis(Pageable pageable) {
         return petRepository.findByTutorIsNull(pageable)
@@ -76,7 +76,14 @@ public class PetService {
                 .orElseThrow(() -> new ResourceNotFoundException("Pet não encontrado com o ID: " + id));
 
         pet.setNome(dto.getNome());
+        pet.setRaca(dto.getRaca());
+        pet.setDataNascimento(dto.getDataNascimento());
         pet.setPeso(dto.getPeso());
+
+        if (dto.getEndereco() != null) {
+            Endereco enderecoAtualizado = enderecoMapper.toEntity(dto.getEndereco());
+            pet.setEndereco(enderecoAtualizado);
+        }
 
         Pet petAtualizado = petRepository.save(pet);
         return petMapper.toDTO(petAtualizado);

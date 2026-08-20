@@ -1,7 +1,9 @@
 package devKaua.projeto.service;
 
 import devKaua.projeto.domain.Adotante;
+import devKaua.projeto.domain.Endereco;
 import devKaua.projeto.domain.Pet;
+import devKaua.projeto.dto.EnderecoDTO;
 import devKaua.projeto.dto.PetRequestDTO;
 import devKaua.projeto.dto.PetResponseDTO;
 import devKaua.projeto.exception.BusinessException;
@@ -22,6 +24,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,7 +64,7 @@ class PetServiceTest {
             Pet pet = new Pet();
             Adotante adotante = new Adotante();
             Pet petSalvo = new Pet();
-            PetResponseDTO responseDTO = new PetResponseDTO();
+            PetResponseDTO responseDTO = PetResponseDTO.builder().id(petId).build();
 
             when(petRepository.findById(petId)).thenReturn(Optional.of(pet));
             when(adotanteRepository.findById(adotanteId)).thenReturn(Optional.of(adotante));
@@ -130,7 +133,7 @@ class PetServiceTest {
         @DisplayName("Sucesso: Deve retornar página de pets sem tutor")
         void deveListarPetsDisponiveis() {
             Pet pet = new Pet();
-            PetResponseDTO dto = new PetResponseDTO();
+            PetResponseDTO dto = PetResponseDTO.builder().build();
             Pageable pageable = PageRequest.of(0, 10);
             Page<Pet> pagePets = new PageImpl<>(List.of(pet));
 
@@ -152,18 +155,40 @@ class PetServiceTest {
         @DisplayName("Sucesso: Deve atualizar os dados do pet com sucesso")
         void deveAtualizarPetComSucesso() {
             Long petId = 1L;
+            LocalDate dataNascimentoAntiga = LocalDate.of(2020, 1, 1);
+            LocalDate dataNascimentoNova = LocalDate.of(2021, 5, 10);
+
             Pet petExistente = new Pet();
             petExistente.setNome("Nome Antigo");
+            petExistente.setRaca("Vira-Lata");
+            petExistente.setDataNascimento(dataNascimentoAntiga);
             petExistente.setPeso(5.0);
 
-            PetRequestDTO requestDTO = new PetRequestDTO();
-            requestDTO.setNome("Nome Novo");
-            requestDTO.setPeso(7.5);
+            EnderecoDTO enderecoDTO = EnderecoDTO.builder()
+                    .logradouro("Rua Nova")
+                    .numero("123")
+                    .cidade("Natal")
+                    .build();
+
+            Endereco enderecoEntity = Endereco.builder()
+                    .logradouro("Rua Nova")
+                    .numero("123")
+                    .cidade("Natal")
+                    .build();
+
+            PetRequestDTO requestDTO = PetRequestDTO.builder()
+                    .nome("Nome Novo")
+                    .raca("Siames")
+                    .dataNascimento(dataNascimentoNova)
+                    .peso(7.5)
+                    .endereco(enderecoDTO)
+                    .build();
 
             Pet petAtualizado = new Pet();
-            PetResponseDTO responseDTO = new PetResponseDTO();
+            PetResponseDTO responseDTO = PetResponseDTO.builder().build();
 
             when(petRepository.findById(petId)).thenReturn(Optional.of(petExistente));
+            when(enderecoMapper.toEntity(enderecoDTO)).thenReturn(enderecoEntity);
             when(petRepository.save(petExistente)).thenReturn(petAtualizado);
             when(petMapper.toDTO(petAtualizado)).thenReturn(responseDTO);
 
@@ -171,7 +196,11 @@ class PetServiceTest {
 
             assertThat(resultado).isNotNull();
             assertThat(petExistente.getNome()).isEqualTo("Nome Novo");
+            assertThat(petExistente.getRaca()).isEqualTo("Siames");
+            assertThat(petExistente.getDataNascimento()).isEqualTo(dataNascimentoNova);
             assertThat(petExistente.getPeso()).isEqualTo(7.5);
+            assertThat(petExistente.getEndereco()).isEqualTo(enderecoEntity);
+
             verify(petRepository).save(petExistente);
         }
 

@@ -142,11 +142,10 @@ class PetRepositoryTest {
     private Pet criarPet(String nome, String cidade) {
         Pet pet = new Pet();
         pet.setNome(nome);
-
         pet.setTipo(TipoAnimal.CACHORRO);
         pet.setSexo(Sexo.MACHO);
         pet.setRaca("SRD (Sem Raça Definida)");
-        pet.setIdade(2.5);
+        pet.setDataNascimento(java.time.LocalDate.now().minusYears(2));
         pet.setPeso(12.0);
         pet.setCreatedAt(java.time.LocalDateTime.now());
 

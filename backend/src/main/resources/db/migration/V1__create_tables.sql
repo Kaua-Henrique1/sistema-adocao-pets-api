@@ -21,23 +21,23 @@ CREATE INDEX IF NOT EXISTS idx_adotantes_nome_fts ON adotantes USING gin(to_tsve
 -- 2. TABELA DE PETS
 CREATE TABLE IF NOT EXISTS pets
 (
-    id         BIGSERIAL PRIMARY KEY,
-    nome       VARCHAR(100) NOT NULL,
-    tipo       VARCHAR(30)  NOT NULL,
-    sexo       VARCHAR(10)  NOT NULL,
-    raca       VARCHAR(50)  NOT NULL,
-    idade      DOUBLE PRECISION NOT NULL,
-    peso       DOUBLE PRECISION NOT NULL,
-    id_tutor   BIGINT,
-    logradouro VARCHAR(150) NOT NULL,
-    numero     VARCHAR(20)  NOT NULL,
-    cidade     VARCHAR(100) NOT NULL,
-    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
+    id              BIGSERIAL PRIMARY KEY,
+    nome            VARCHAR(100) NOT NULL,
+    tipo            VARCHAR(30)  NOT NULL,
+    sexo            VARCHAR(10)  NOT NULL,
+    raca            VARCHAR(50)  NOT NULL,
+    data_nascimento DATE NOT NULL,
+    peso            DOUBLE PRECISION NOT NULL,
+    id_tutor        BIGINT,
+    logradouro      VARCHAR(150) NOT NULL,
+    numero          VARCHAR(20)  NOT NULL,
+    cidade          VARCHAR(100) NOT NULL,
+    created_at      TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
 
     CONSTRAINT fk_pets_tutor FOREIGN KEY (id_tutor)
     REFERENCES adotantes (id)
-                         ON DELETE SET NULL
-                         ON UPDATE CASCADE
+                              ON DELETE SET NULL
+                              ON UPDATE CASCADE
     );
 
 CREATE INDEX IF NOT EXISTS idx_pets_nome ON pets (nome);

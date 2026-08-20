@@ -1,80 +1,169 @@
-<header class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-  <h2>Gerenciamento de Adotantes</h2>
-  <button class="btn-secondary" routerLink="/home">← Voltar ao Home</button>
-</header>
-<!-- Exibe a tabela quando não estiver carregando -->
-@if (true) {
-  <table class="table">
-    <thead>
-    <tr>
-      <th>ID</th>
-      <th>Nome</th>
-      <th>CPF</th>
-      <th>Contato</th>
-      <th>Cidade</th>
-      <th>Ações</th>
-    </tr>
-    </thead>
-    <tbody>
-      @for (a of adotantes; track a.id) {
-        <tr>
-          <td>#{{ a.id }}</td>
-          <td>{{ a.nome }}</td>
-          <td>{{ a.cpf }}</td>
-          <td>
-            {{ a.telefone }}<br />
-            <small>{{ a.email }}</small>
-          </td>
-          <!-- Ponto de interrogação ?. para evitar falha no template -->
-          <td>{{ a.endereco?.cidade || 'N/A' }}</td>
-          <td>
-            <button (click)="editar(a)">Editar</button>
-            <button (click)="deletar(a.id)">Remover</button>
-          </td>
-        </tr>
-      } @empty {
-        <tr>
-          <td colspan="6" style="text-align: center;">Nenhum adotante cadastrado.</td>
-        </tr>
-      }
+<div class="container">
+  <header class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2>Gerenciamento de Adotantes</h2>
+    <button class="btn-secondary" routerLink="/home">← Voltar ao Home</button>
+  </header>
+
+  <!-- Filtro por ID -->
+  <div class="filters-card" style="margin-bottom: 20px;">
+    <div class="filter-group">
+      <label>Buscar por ID:</label>
+      <div class="input-action" style="display: flex; gap: 10px;">
+        <input type="number" [(ngModel)]="termoId" placeholder="Ex: 1" style="padding: 6px;" />
+        <button class="btn-primary" (click)="buscarPorId()">Buscar</button>
+        <button class="btn-secondary" (click)="carregarAdotantes(0)">Limpar Filtro</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensagens do sistema -->
+  @if (carregando) { <p class="loading">Carregando dados...</p> }
+  @if (mensagemErro) { <p class="alert error" style="color: red; font-weight: bold;">{{ mensagemErro }}</p> }
+  @if (mensagemSucesso) { <p class="alert success" style="color: green; font-weight: bold;">{{ mensagemSucesso }}</p> }
+
+  <!-- Tabela de Listagem -->
+  @if (!carregando) {
+    <table class="table" style="width: 100%; border-collapse: collapse;">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>CPF</th>
+        <th>Contato</th>
+        <th>Cidade</th>
+        <th>Ações</th>
+      </tr>
+      </thead>
+      <tbody>
+        @for (a of adotantes; track a.id) {
+          <tr>
+            <td>#{{ a.id }}</td>
+            <td>{{ a.nome }}</td>
+            <td>{{ a.cpf }}</td>
+            <td>
+              {{ a.telefone }}<br />
+              <small>{{ a.email }}</small>
+            </td>
+            <td>{{ a.endereco?.cidade || 'N/A' }}</td>
+            <td>
+              <div style="display: flex; gap: 5px;">
+                <button class="btn-primary" (click)="abrirModalEdicao(a)">Editar</button>
+                <button class="btn-danger" (click)="deletar(a.id)">Remover</button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 15px;">Nenhum adotante encontrado.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
 
     <!-- Controles de Paginação -->
-      @if (totalPaginas > 1) {
-        <div style="display: flex; justify: space-between; align-items: center; margin-top: 15px;">
+    @if (totalPaginas > 1) {
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+        <small>
+          Exibindo página <strong>{{ paginaAtual + 1 }}</strong> de <strong>{{ totalPaginas }}</strong>
+          (Total: {{ totalElementos }} registros)
+        </small>
 
-          <small>
-            Exibindo página <strong>{{ paginaAtual + 1 }}</strong> de <strong>{{ totalPaginas }}</strong>
-            (Total: {{ totalElementos }} registros)
-          </small>
+        <div style="display: flex; gap: 5px;">
+          <button (click)="paginaAnterior()" [disabled]="paginaAtual === 0">&laquo; Anterior</button>
 
-          <div style="display: flex; gap: 5px;">
-            <!-- Botão Anterior -->
+          @for (p of [].constructor(totalPaginas); track $index) {
             <button
-              (click)="paginaAnterior()"
-              [disabled]="paginaAtual === 0">
-              &laquo; Anterior
+              (click)="irParaPagina($index)"
+              [style.font-weight]="$index === paginaAtual ? 'bold' : 'normal'"
+              [style.background-color]="$index === paginaAtual ? '#ddd' : ''">
+              {{ $index + 1 }}
             </button>
+          }
 
-            <!-- Botões Numéricos de Página -->
-            @for (p of [].constructor(totalPaginas); track $index) {
-              <button
-                (click)="irParaPagina($index)"
-                [style.font-weight]="$index === paginaAtual ? 'bold' : 'normal'"
-                [style.background-color]="$index === paginaAtual ? '#ddd' : ''">
-                {{ $index + 1 }}
-              </button>
-            }
+          <button (click)="proximaPagina()" [disabled]="paginaAtual >= totalPaginas - 1">Próximo &raquo;</button>
+        </div>
+      </div>
+    }
+  }
 
-            <!-- Botão Próximo -->
-            <button
-              (click)="proximaPagina()"
-              [disabled]="paginaAtual >= totalPaginas - 1">
-              Próximo &raquo;
-            </button>
+  @if (exibirModalEdicao) {
+    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+      <div style="background: white; padding: 25px; border-radius: 8px; width: 400px; max-width: 90%; max-height: 90vh; overflow-y: auto;">
+        <h3>Editar Adotante #{{ idEmEdicao }}</h3>
+
+        <form [formGroup]="form" (ngSubmit)="confirmarAtualizacao()">
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+            <div>
+              <label>Nome Completo:</label>
+              <input type="text" formControlName="nome" placeholder="Nome completo" style="width: 100%; box-sizing: border-box;" />
+              @if (form.get('nome')?.touched && form.get('nome')?.invalid) {
+                <small style="color: red;">Informe nome e sobrenome válidos.</small>
+              }
+            </div>
+
+            <div>
+              <label>CPF (Não editável):</label>
+              <input type="text" formControlName="cpf" style="width: 100%; box-sizing: border-box; background-color: #e9ecef; cursor: not-allowed;" />
+            </div>
+
+            <div>
+              <label>Telefone:</label>
+              <input
+                type="text"
+                formControlName="telefone"
+                placeholder="(84) 98866-5779"
+                maxlength="15"
+                (input)="aplicarMascaraTelefone($event)"
+                style="width: 100%; box-sizing: border-box;"
+              />
+              @if (form.get('telefone')?.touched && form.get('telefone')?.invalid) {
+                <small style="color: red;">Informe um telefone válido com DDD. Ex: (84) 98866-5779</small>
+              }
+            </div>
+
+            <div>
+              <label>E-mail:</label>
+              <input type="email" formControlName="email" placeholder="E-mail válido" style="width: 100%; box-sizing: border-box;" />
+              @if (form.get('email')?.touched && form.get('email')?.invalid) {
+                <small style="color: red;">Informe um e-mail válido.</small>
+              }
+            </div>
+
+            <div formGroupName="endereco" style="border: 1px solid #ddd; padding: 10px; border-radius: 6px; background-color: #f9f9f9; display: flex; flex-direction: column; gap: 8px;">
+              <strong>Endereço</strong>
+
+              <div>
+                <label>Logradouro:</label>
+                <input type="text" formControlName="logradouro" placeholder="Rua / Avenida" style="width: 100%; box-sizing: border-box;" />
+                @if (form.get('endereco.logradouro')?.touched && form.get('endereco.logradouro')?.invalid) {
+                  <small style="color: red;">Logradouro inválido.</small>
+                }
+              </div>
+
+              <div>
+                <label>Número:</label>
+                <input type="text" formControlName="numero" placeholder="Ex: 123 ou S/N" style="width: 100%; box-sizing: border-box;" />
+                @if (form.get('endereco.numero')?.touched && form.get('endereco.numero')?.invalid) {
+                  <small style="color: red;">Número inválido.</small>
+                }
+              </div>
+
+              <div>
+                <label>Cidade:</label>
+                <input type="text" formControlName="cidade" placeholder="Cidade" style="width: 100%; box-sizing: border-box;" />
+                @if (form.get('endereco.cidade')?.touched && form.get('endereco.cidade')?.invalid) {
+                  <small style="color: red;">Cidade inválida.</small>
+                }
+              </div>
+            </div>
           </div>
 
-        </div>
-      }
-    </tbody>
-  </table>
-}
+          <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+            <button type="button" class="btn-secondary" (click)="fecharModal()">Cancelar</button>
+            <button type="submit" class="btn-primary">Salvar Alterações</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

@@ -15,21 +15,26 @@ import { RouterLink } from '@angular/router';
 export class Pessoas implements OnInit {
   private fb = inject(FormBuilder);
   private adotanteService = inject(AdotanteService);
-  private cdr = inject(ChangeDetectorRef); // <-- Injeção do ChangeDetectorRef
+  private cdr = inject(ChangeDetectorRef);
 
   adotantes: AdotanteResponse[] = [];
-  exibirFormulario = false;
+  carregando = false;
   mensagemSucesso = '';
   mensagemErro = '';
-  carregando = false;
 
-  idEmEdicao: number | null = null;
   termoId: number | null = null;
+  idEmEdicao: number | null = null;
+  exibirModalEdicao = false;
+
+  paginaAtual: number = 0;
+  tamanhoPagina: number = 10;
+  totalPaginas: number = 0;
+  totalElementos: number = 0;
 
   form = this.fb.group({
     nome: ['', [Validators.required, Validators.pattern(/^[A-Za-zÀ-ÿ]+(\s+[A-Za-zÀ-ÿ]+)+$/)]],
     cpf: ['', [Validators.required, Validators.pattern(/^\d{11}$|^\d{3}\.\d{3}\.\d{3}-\d{2}$/)]],
-    telefone: ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
+    telefone: ['', [Validators.required, Validators.pattern(/^\(\d{2}\)\s\d{4,5}-\d{4}$/)]],
     email: ['', [Validators.required, Validators.email]],
     endereco: this.fb.group({
       logradouro: ['', [Validators.required, Validators.pattern(/^[A-Za-zÀ-ÿ\s.,'-]+$/)]],
@@ -42,11 +47,6 @@ export class Pessoas implements OnInit {
     this.carregarAdotantes();
   }
 
-  paginaAtual: number = 0;
-  tamanhoPagina: number = 10;
-  totalPaginas: number = 0;
-  totalElementos: number = 0;
-
   carregarAdotantes(pagina: number = 0): void {
     this.paginaAtual = pagina;
     this.carregando = true;
@@ -54,19 +54,16 @@ export class Pessoas implements OnInit {
 
     this.adotanteService.listarTodos(this.paginaAtual, this.tamanhoPagina).subscribe({
       next: (resposta: any) => {
-        // Guarda os dados da lista
         this.adotantes = [...(resposta?.content ?? [])];
-
-        // Guarda as informações de paginação vindas do Spring Data Page
         this.totalPaginas = resposta?.totalPages ?? 0;
         this.totalElementos = resposta?.totalElements ?? 0;
-
         this.carregando = false;
         this.cdr.detectChanges();
       },
       error: (erro) => {
         console.error('Erro ao buscar adotantes:', erro);
         this.adotantes = [];
+        this.mensagemErro = 'Erro ao carregar lista de adotantes.';
         this.carregando = false;
         this.cdr.detectChanges();
       },
@@ -114,20 +111,43 @@ export class Pessoas implements OnInit {
     });
   }
 
-  novoAdotante(): void {
-    this.idEmEdicao = null;
-    this.form.reset();
-    this.exibirFormulario = true;
+  aplicarMascaraTelefone(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let valor = input.value.replace(/\D/g, '');
+
+    if (valor.length > 11) {
+      valor = valor.substring(0, 11);
+    }
+
+    if (valor.length > 10) {
+      valor = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+    } else if (valor.length > 6) {
+      valor = valor.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+    } else if (valor.length > 2) {
+      valor = valor.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+    } else if (valor.length > 0) {
+      valor = valor.replace(/^(\d*)$/, '($1');
+    }
+
+    input.value = valor;
+    this.form.get('telefone')?.setValue(valor, { emitEvent: false });
   }
 
-  editar(adotante: AdotanteResponse): void {
+  abrirModalEdicao(adotante: AdotanteResponse): void {
     this.idEmEdicao = adotante.id;
-    this.exibirFormulario = true;
+
+    let telFormatado = adotante.telefone || '';
+    const digitos = telFormatado.replace(/\D/g, '');
+    if (digitos.length === 11) {
+      telFormatado = digitos.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+    } else if (digitos.length === 10) {
+      telFormatado = digitos.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3');
+    }
 
     this.form.patchValue({
       nome: adotante.nome,
       cpf: adotante.cpf,
-      telefone: adotante.telefone,
+      telefone: telFormatado,
       email: adotante.email,
       endereco: {
         logradouro: adotante.endereco?.logradouro || '',
@@ -135,49 +155,66 @@ export class Pessoas implements OnInit {
         cidade: adotante.endereco?.cidade || '',
       },
     });
+
+    this.form.get('cpf')?.disable();
+    this.exibirModalEdicao = true;
+    this.cdr.detectChanges();
   }
 
-  salvar(): void {
+  fecharModal(): void {
+    this.exibirModalEdicao = false;
+    this.idEmEdicao = null;
+    this.form.get('cpf')?.enable();
+    this.form.reset();
+    this.cdr.detectChanges();
+  }
+
+  private apenasNumeros(valor: string | undefined | null): string {
+    return valor ? valor.replace(/\D/g, '') : '';
+  }
+
+  confirmarAtualizacao(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    const payload = this.form.value as AdotanteRequest;
+    if (!this.idEmEdicao) return;
 
-    if (this.idEmEdicao) {
-      this.adotanteService.atualizar(this.idEmEdicao, payload).subscribe({
-        next: () => {
-          this.mensagemSucesso = 'Adotante atualizado com sucesso!';
-          this.finalizarAcao();
-        },
-        error: () => (this.mensagemErro = 'Erro ao atualizar adotante.'),
-      });
-    } else {
-      this.adotanteService.cadastrar(payload).subscribe({
-        next: () => {
-          this.mensagemSucesso = 'Adotante cadastrado com sucesso!';
-          this.finalizarAcao();
-        },
-        error: () => (this.mensagemErro = 'Erro ao cadastrar adotante.'),
-      });
-    }
+    this.carregando = true;
+    this.mensagemErro = '';
+
+    const rawValue = this.form.getRawValue();
+
+    const payload: AdotanteRequest = {
+      ...rawValue,
+      cpf: this.apenasNumeros(rawValue.cpf),
+      telefone: this.apenasNumeros(rawValue.telefone),
+    } as AdotanteRequest;
+
+    this.adotanteService.atualizar(this.idEmEdicao, payload).subscribe({
+      next: () => {
+        this.mensagemSucesso = 'Adotante atualizado com sucesso!';
+        this.fecharModal();
+        this.carregarAdotantes(this.paginaAtual);
+        setTimeout(() => (this.mensagemSucesso = ''), 4000);
+      },
+      error: (err) => {
+        console.error('Erro ao atualizar:', err);
+        this.mensagemErro =
+          err.error?.message || 'Erro ao atualizar dados do adotante. Verifique os campos.';
+        this.carregando = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   deletar(id: number): void {
     if (confirm('Deseja realmente remover este adotante?')) {
       this.adotanteService.deletar(id).subscribe({
-        next: () => this.carregarAdotantes(),
+        next: () => this.carregarAdotantes(this.paginaAtual),
         error: (err) => console.error('Erro ao deletar:', err),
       });
     }
-  }
-
-  private finalizarAcao(): void {
-    this.form.reset();
-    this.exibirFormulario = false;
-    this.idEmEdicao = null;
-    this.carregarAdotantes();
-    setTimeout(() => (this.mensagemSucesso = ''), 4000);
   }
 }

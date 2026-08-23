@@ -19,8 +19,8 @@ public interface PetRepository extends JpaRepository<Pet, Long> {
     // Buscar todos os pets vinculados a um tutor específico
     List<Pet> findByTutorId(Long tutorId);
 
-    // Consulta customizada paginada por cidade do abrigo/pet
-    Page<Pet> findByEnderecoCidadeIgnoreCase(String cidade, Pageable pageable);
+    // Consulta customizada paginada por cidade onde pet encontyrado
+    Page<Pet> findByEnderecoCidadeContainingIgnoreCase(String cidade, Pageable pageable);
 
     // Consulta inteligente por fragmento do nome do pet (usando o índice do banco)
     @Query("SELECT p FROM Pet p WHERE LOWER(p.nome) LIKE LOWER(CONCAT('%', :nome, '%'))")

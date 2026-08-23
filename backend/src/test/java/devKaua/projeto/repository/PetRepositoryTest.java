@@ -93,7 +93,7 @@ class PetRepositoryTest {
         Pet pet = criarPet("Caramelo", "SÃO PAULO");
         entityManager.persist(pet);
 
-        Page<Pet> paginaEncontrada = petRepository.findByEnderecoCidadeIgnoreCase("são paulo", PageRequest.of(0, 10));
+        Page<Pet> paginaEncontrada = petRepository.findByEnderecoCidadeContainingIgnoreCase("são paulo", PageRequest.of(0, 10));
 
         assertThat(paginaEncontrada.getContent()).isNotEmpty();
         assertThat(paginaEncontrada.getContent().get(0).getNome()).isEqualTo("Caramelo");
@@ -105,9 +105,21 @@ class PetRepositoryTest {
         Pet pet = criarPet("Caramelo", "Natal");
         entityManager.persist(pet);
 
-        Page<Pet> paginaEncontrada = petRepository.findByEnderecoCidadeIgnoreCase("Recife", PageRequest.of(0, 10));
+        Page<Pet> paginaEncontrada = petRepository.findByEnderecoCidadeContainingIgnoreCase("Recife", PageRequest.of(0, 10));
 
         assertThat(paginaEncontrada.getContent()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Sucesso: Deve encontrar pet buscando por fragmento do nome da cidade (ex: 'Parna' para 'Parnamirim')")
+    void deveRetornarPetPorFragmentoDoNomeDaCidade() {
+        Pet pet = criarPet("Bidu", "Parnamirim");
+        entityManager.persist(pet);
+
+        Page<Pet> paginaEncontrada = petRepository.findByEnderecoCidadeContainingIgnoreCase("Parna", PageRequest.of(0, 10));
+
+        assertThat(paginaEncontrada.getContent()).isNotEmpty();
+        assertThat(paginaEncontrada.getContent().get(0).getNome()).isEqualTo("Bidu");
     }
 
     // --- TESTES PARA: buscarPorNomeAproximado() ---

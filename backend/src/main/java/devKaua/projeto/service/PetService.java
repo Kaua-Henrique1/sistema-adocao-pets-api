@@ -48,7 +48,7 @@ public class PetService {
 
     @Transactional(readOnly = true)
     public Page<PetResponseDTO> listarPorCidade(String cidade, Pageable pageable) {
-        return petRepository.findByEnderecoCidadeIgnoreCase(cidade, pageable)
+        return petRepository.findByEnderecoCidadeContainingIgnoreCase(cidade, pageable)
                 .map(petMapper::toDTO);
     }
 

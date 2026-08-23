@@ -1,7 +1,10 @@
 <div class="container">
   <header class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h2>Encontre um Pet</h2>
-    <button class="btn-secondary" routerLink="/home">← Voltar ao Home</button>
+    <div style="display: flex; gap: 10px;">
+      <button class="btn-primary" (click)="abrirModalCadastro()">+ Novo Pet</button>
+      <button class="btn-secondary" routerLink="/home">← Voltar ao Home</button>
+    </div>
   </header>
 
   <!-- Painel de Filtros -->
@@ -9,7 +12,7 @@
     <div class="filter-group">
       <label>Buscar por ID:</label>
       <div class="input-action">
-        <input type="number" [(ngModel)]="termoId" placeholder="Ex: 1" />
+        <input type="number" [(ngModel)]="termoId" (keyup.enter)="buscarPorId()" placeholder="Ex: 1" />
         <button class="btn-primary" (click)="buscarPorId()">Buscar</button>
       </div>
     </div>
@@ -17,7 +20,12 @@
     <div class="filter-group">
       <label>Buscar por Cidade:</label>
       <div class="input-action">
-        <input type="text" [(ngModel)]="termoCidade" placeholder="Ex: Parnamirim" />
+        <input
+          type="text"
+          [(ngModel)]="termoCidade"
+          (keyup.enter)="buscarPorCidade(0)"
+          placeholder="Ex: Parnamirim"
+        />
         <button class="btn-primary" (click)="buscarPorCidade(0)">Filtrar</button>
       </div>
     </div>
@@ -29,10 +37,12 @@
 
   <!-- Mensagens do sistema -->
   @if (carregando) { <p class="loading">Buscando pets...</p> }
-  @if (mensagemErro) { <p class="alert error">{{ mensagemErro }}</p> }
+  @if (mensagemErro && !exibirModalEdicao && !exibirModalCadastro) {
+    <p class="alert error">{{ mensagemErro }}</p>
+  }
   @if (mensagemSucesso) { <p class="alert success">{{ mensagemSucesso }}</p> }
 
-  <!-- Grid mantida visível mesmo com erro no formulário -->
+  <!-- Grid de Pets -->
   @if (!carregando) {
     <div class="pets-grid">
       @for (pet of pets; track pet.id) {
@@ -61,11 +71,15 @@
     </div>
   }
 
-  <!-- Modal/Card de Edição ajustado para o Backend -->
+  <!-- Modal de Edição -->
   @if (exibirModalEdicao) {
     <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
       <div style="background: white; padding: 25px; border-radius: 8px; width: 400px; max-width: 90%; max-height: 90vh; overflow-y: auto;">
         <h3>Editar Pet #{{ idEmEdicao }}</h3>
+
+        @if (mensagemErro) {
+          <p class="alert error" style="margin-bottom: 15px;">{{ mensagemErro }}</p>
+        }
 
         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
           <label>Nome:</label>
@@ -99,6 +113,59 @@
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
           <button class="btn-secondary" (click)="fecharModal()">Cancelar</button>
           <button class="btn-primary" (click)="confirmarAtualizacao()">Salvar Alterações</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal de Cadastro -->
+  @if (exibirModalCadastro) {
+    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+      <div style="background: white; padding: 25px; border-radius: 8px; width: 400px; max-width: 90%; max-height: 90vh; overflow-y: auto;">
+        <h3>Cadastrar Novo Pet</h3>
+
+        @if (mensagemErro) {
+          <p class="alert error" style="margin-bottom: 15px;">{{ mensagemErro }}</p>
+        }
+
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+          <label>Nome:</label>
+          <input type="text" [(ngModel)]="novoPetForm.nome" placeholder="Ex: Bob" />
+
+          <label>Tipo:</label>
+          <select [(ngModel)]="novoPetForm.tipo">
+            <option value="CACHORRO">Cachorro</option>
+            <option value="GATO">Gato</option>
+          </select>
+
+          <label>Sexo:</label>
+          <select [(ngModel)]="novoPetForm.sexo">
+            <option value="MACHO">Macho</option>
+            <option value="FEMEA">Fêmea</option>
+          </select>
+
+          <label>Raça:</label>
+          <input type="text" [(ngModel)]="novoPetForm.raca" placeholder="Ex: SRD ou Labrador" />
+
+          <label>Data de Nascimento:</label>
+          <input type="date" [(ngModel)]="novoPetForm.dataNascimento" />
+
+          <label>Peso (kg):</label>
+          <input type="number" step="0.1" [(ngModel)]="novoPetForm.peso" placeholder="Ex: 5.2" />
+
+          <label>Logradouro (Apenas letras):</label>
+          <input type="text" [(ngModel)]="novoPetForm.endereco.logradouro" placeholder="Rua / Avenida" />
+
+          <label>Número:</label>
+          <input type="text" [(ngModel)]="novoPetForm.endereco.numero" placeholder="Número ou S/N" />
+
+          <label>Cidade:</label>
+          <input type="text" [(ngModel)]="novoPetForm.endereco.cidade" placeholder="Cidade" />
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+          <button class="btn-secondary" (click)="fecharModalCadastro()">Cancelar</button>
+          <button class="btn-primary" (click)="cadastrarPet()">Cadastrar</button>
         </div>
       </div>
     </div>

@@ -25,10 +25,12 @@ export class Pets implements OnInit {
   termoId: number | null = null;
 
   exibirModalEdicao = false;
+  exibirModalCadastro = false;
   idEmEdicao: number | null = null;
-  petForm: PetRequest = this.getFormVazio();
 
-  // Paginação
+  petForm: PetRequest = this.getFormVazio();
+  novoPetForm: PetRequest = this.getFormVazio();
+
   paginaAtual = 0;
   totalPaginas = 0;
   totalElementos = 0;
@@ -43,13 +45,15 @@ export class Pets implements OnInit {
       tipo: 'CACHORRO',
       sexo: 'MACHO',
       raca: '',
-      dataNascimento: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+      dataNascimento: new Date().toISOString().split('T')[0],
       peso: 0.5,
       endereco: { logradouro: '', numero: '', cidade: '' },
     };
   }
 
   carregarDisponiveis(pagina: number = 0): void {
+    this.termoCidade = '';
+    this.termoId = null;
     this.paginaAtual = pagina;
     this.carregando = true;
     this.mensagemErro = '';
@@ -73,14 +77,19 @@ export class Pets implements OnInit {
   }
 
   buscarPorCidade(pagina: number = 0): void {
-    if (!this.termoCidade.trim()) {
+    this.termoId = null;
+    this.mensagemErro = '';
+
+    const cidadeLimpa = this.termoCidade.trim();
+    if (!cidadeLimpa) {
       this.carregarDisponiveis();
       return;
     }
+
     this.paginaAtual = pagina;
     this.carregando = true;
 
-    this.petService.listarPorCidade(this.termoCidade, this.paginaAtual, 10).subscribe({
+    this.petService.listarPorCidade(cidadeLimpa, this.paginaAtual, 10).subscribe({
       next: (resposta: any) => {
         const lista = resposta?.content ?? (Array.isArray(resposta) ? resposta : []);
         this.pets = [...lista];
@@ -89,9 +98,14 @@ export class Pets implements OnInit {
         this.carregando = false;
         this.cdr.detectChanges();
       },
-      error: () => {
-        this.mensagemErro = `Erro ao buscar pets na cidade: ${this.termoCidade}.`;
-        this.pets = [];
+      error: (err) => {
+        // Trata HTTP 404 (nenhum pet encontrado com aquele termo parcial) sem quebrar a aplicação
+        if (err.status === 404) {
+          this.pets = [];
+        } else {
+          this.mensagemErro = `Erro ao conectar com o servidor para a busca por cidade.`;
+          this.pets = [];
+        }
         this.carregando = false;
         this.cdr.detectChanges();
       },
@@ -99,6 +113,9 @@ export class Pets implements OnInit {
   }
 
   buscarPorId(): void {
+    this.termoCidade = '';
+    this.mensagemErro = '';
+
     if (!this.termoId) {
       this.carregarDisponiveis();
       return;
@@ -120,8 +137,61 @@ export class Pets implements OnInit {
     });
   }
 
+  abrirModalCadastro(): void {
+    this.novoPetForm = this.getFormVazio();
+    this.mensagemErro = '';
+    this.exibirModalCadastro = true;
+  }
+
+  fecharModalCadastro(): void {
+    this.exibirModalCadastro = false;
+    this.novoPetForm = this.getFormVazio();
+    this.mensagemErro = '';
+  }
+
+  cadastrarPet(): void {
+    this.mensagemErro = '';
+    const logradouroLimpo = (this.novoPetForm.endereco?.logradouro || '').replace(/[0-9]/g, '').trim();
+
+    const payload: PetRequest = {
+      nome: this.novoPetForm.nome?.trim(),
+      tipo: this.novoPetForm.tipo,
+      sexo: this.novoPetForm.sexo,
+      raca: this.novoPetForm.raca?.trim(),
+      dataNascimento: this.novoPetForm.dataNascimento,
+      peso: Number(this.novoPetForm.peso),
+      endereco: {
+        logradouro: logradouroLimpo,
+        numero: this.novoPetForm.endereco?.numero?.trim(),
+        cidade: this.novoPetForm.endereco?.cidade?.trim(),
+      },
+    };
+
+    this.petService.cadastrar(payload).subscribe({
+      next: (petCadastrado: PetResponse) => {
+        this.mensagemSucesso = `Pet "${petCadastrado.nome}" cadastrado com sucesso!`;
+        this.fecharModalCadastro();
+        this.carregarDisponiveis();
+
+        setTimeout(() => {
+          this.mensagemSucesso = '';
+          this.cdr.detectChanges();
+        }, 4000);
+      },
+      error: (err) => {
+        if (Array.isArray(err.error) && err.error.length > 0) {
+          this.mensagemErro = `Erro em ${err.error[0].campo}: ${err.error[0].mensagem}`;
+        } else {
+          this.mensagemErro = 'Erro ao cadastrar o pet. Verifique os dados fornecidos.';
+        }
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
   abrirModalEdicao(pet: PetResponse): void {
     this.idEmEdicao = pet.id;
+    this.mensagemErro = '';
     this.petForm = {
       nome: pet.nome || '',
       tipo: pet.tipo || 'CACHORRO',
@@ -157,6 +227,7 @@ export class Pets implements OnInit {
 
   confirmarAtualizacao(): void {
     if (!this.idEmEdicao) return;
+    this.mensagemErro = '';
 
     const logradouroLimpo = (this.petForm.endereco?.logradouro || '').replace(/[0-9]/g, '').trim();
 
@@ -180,7 +251,6 @@ export class Pets implements OnInit {
           this.mensagemSucesso = 'Pet atualizado com sucesso!';
 
           const index = this.pets.findIndex((p) => p.id === this.idEmEdicao);
-
           if (index !== -1) {
             this.pets[index] = { ...petAtualizado };
             this.pets = [...this.pets];
@@ -197,7 +267,6 @@ export class Pets implements OnInit {
           }, 4000);
         },
         error: (err) => {
-          console.error('Erro retornado pelo Spring:', err.error);
           if (Array.isArray(err.error) && err.error.length > 0) {
             this.mensagemErro = `Erro em ${err.error[0].campo}: ${err.error[0].mensagem}`;
           } else {

@@ -4,6 +4,10 @@
 -- Quantidades: 30 Pessoas (Adotantes/Tutores) e 100 Pets (Adotados/Disponíveis)
 -- =============================================================================
 
+-- Inserção segura do usuário Administrador inicial
+INSERT INTO tb_usuario (login, senha, role)
+VALUES ('admin@email.com', '$2a$10$9idPqmTWl87OkjS1VVWBYurW85avB5Wyo8oLIXuO.8eOF3UjuqP4O', 'ADMIN');
+
 -- -----------------------------------------------------------------------------
 -- 1. INSERÇÃO DE 30 ADOTANTES / TUTORES (IDs 1 a 30)
 -- -----------------------------------------------------------------------------

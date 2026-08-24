@@ -50,10 +50,11 @@ public class AuthenticationController {
         return ResponseEntity.ok(new LoginResponseDTO(token));
     }
 
-    @Operation(summary = "Registrar novo Usuário", description = "Cadastra uma nova conta no sistema de forma pública.")
+    @Operation(summary = "Registrar novo Usuário", description = "Cadastra uma nova conta no sistema (Restrito a administradores).")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuário registrado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Login já cadastrado ou dados inválidos")
+            @ApiResponse(responseCode = "400", description = "Login já cadastrado ou dados inválidos"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado / Requer perfil de Administrador")
     })
     @PostMapping("/register")
     public ResponseEntity register(@RequestBody @Valid RegisterDTO data) {

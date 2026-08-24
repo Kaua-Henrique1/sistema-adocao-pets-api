@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -56,7 +57,7 @@ public class PetController {
     @ApiResponse(responseCode = "200", description = "Página de pets disponíveis obtida com sucesso")
     @GetMapping("/disponiveis")
     public ResponseEntity<Page<PetResponseDTO>> listarDisponiveis(
-            @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
         Page<PetResponseDTO> page = petService.listarDisponiveis(pageable);
         return ResponseEntity.ok(page);
     }

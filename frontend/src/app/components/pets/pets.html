@@ -24,7 +24,7 @@
           type="text"
           [(ngModel)]="termoCidade"
           (keyup.enter)="buscarPorCidade(0)"
-          placeholder="Ex: Parnamirim"
+          placeholder="Ex: Parnami"
         />
         <button class="btn-primary" (click)="buscarPorCidade(0)">Filtrar</button>
       </div>
@@ -35,9 +35,9 @@
     </div>
   </div>
 
-  <!-- Mensagens do sistema -->
+  <!-- Mensagens Globais -->
   @if (carregando) { <p class="loading">Buscando pets...</p> }
-  @if (mensagemErro && !exibirModalEdicao && !exibirModalCadastro) {
+  @if (mensagemErro && !exibirModalEdicao && !exibirModalCadastro && !exibirModalAdocao) {
     <p class="alert error">{{ mensagemErro }}</p>
   }
   @if (mensagemSucesso) { <p class="alert success">{{ mensagemSucesso }}</p> }
@@ -60,6 +60,7 @@
           <div class="pet-footer">
             <small>📍 {{ pet.endereco?.cidade || 'N/A' }} - {{ pet.endereco?.logradouro || 'N/A' }}</small>
             <div style="display: flex; gap: 5px; margin-top: 10px;">
+              <button class="btn-primary" style="background-color: #28a745;" (click)="abrirModalAdocao(pet)">Adotar</button>
               <button class="btn-primary" (click)="abrirModalEdicao(pet)">Editar</button>
               <button class="btn-danger" (click)="deletarPet(pet)">Deletar</button>
             </div>
@@ -68,6 +69,77 @@
       } @empty {
         <p class="text-center">Nenhum pet encontrado com os filtros informados.</p>
       }
+    </div>
+  }
+
+  <!-- Modal de Adoção -->
+  @if (exibirModalAdocao && petParaAdotar) {
+    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+      <div style="background: white; padding: 25px; border-radius: 8px; width: 500px; max-width: 90%; max-height: 90vh; overflow-y: auto;">
+        <h3>Processo de Adoção</h3>
+        <p>Adoção do Pet: <strong>{{ petParaAdotar.nome }}</strong> (#{{ petParaAdotar.id }})</p>
+
+        @if (mensagemErro) {
+          <p class="alert error" style="margin-bottom: 15px;">{{ mensagemErro }}</p>
+        }
+
+        <div style="display: flex; gap: 10px; margin-top: 15px; margin-bottom: 15px;">
+          <input
+            type="text"
+            [(ngModel)]="termoBuscaAdotante"
+            (keyup.enter)="buscarAdotantes()"
+            placeholder="Filtrar por nome do adotante..."
+            style="flex: 1;"
+          />
+          <button class="btn-primary" (click)="buscarAdotantes()">Buscar</button>
+        </div>
+
+        <label><strong>Selecione o Adotante:</strong></label>
+        <div style="max-height: 180px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px; padding: 5px;">
+          @if (carregandoAdotantes) {
+            <p style="padding: 10px; text-align: center;">Carregando adotantes...</p>
+          } @else {
+            @for (adotante of adotantesEncontrados; track adotante.id) {
+              <div
+                (click)="selecionarAdotante(adotante)"
+                [style.background-color]="adotanteSelecionado?.id === adotante.id ? '#e3f2fd' : 'transparent'"
+                [style.border-left]="adotanteSelecionado?.id === adotante.id ? '4px solid #0d6efd' : 'none'"
+                style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;"
+              >
+                <div>
+                  <strong>#{{ adotante.id }} - {{ adotante.nome }}</strong><br />
+                  <small style="color: #666;">CPF: {{ adotante.cpf }} | Cidade: {{ adotante.endereco?.cidade }}</small>
+                </div>
+                @if (adotanteSelecionado?.id === adotante.id) {
+                  <span style="color: #0d6efd; font-weight: bold;">✓ Selecionado</span>
+                }
+              </div>
+            } @empty {
+              <p style="padding: 10px; text-align: center; color: #777;">Nenhum adotante encontrado.</p>
+            }
+          }
+        </div>
+
+        @if (adotanteSelecionado) {
+          <div style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; border: 1px dashed #28a745;">
+            <small style="color: #28a745; font-weight: bold;">Adotante Selecionado:</small>
+            <p style="margin: 0; font-size: 14px;"><strong>{{ adotanteSelecionado.nome }}</strong> (CPF: {{ adotanteSelecionado.cpf }})</p>
+          </div>
+        }
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+          <button class="btn-secondary" (click)="fecharModalAdocao()">Cancelar</button>
+          <button
+            class="btn-primary"
+            style="background-color: #28a745;"
+            [disabled]="!adotanteSelecionado"
+            [style.opacity]="!adotanteSelecionado ? '0.5' : '1'"
+            (click)="confirmarAdocao()"
+          >
+            Confirmar Adoção
+          </button>
+        </div>
+      </div>
     </div>
   }
 

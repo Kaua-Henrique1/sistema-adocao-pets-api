@@ -12,8 +12,13 @@ export class AdotanteService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/api/v1/adotantes`;
 
-  listarTodos(page: number = 0, size: number = 10): Observable<any> {
+  listarTodosAdotantes(page: number = 0, size: number = 10): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}?page=${page}&size=${size}`);
+  }
+
+  listar(termo?: string): Observable<any> {
+    const url = termo ? `${this.apiUrl}?nome=${encodeURIComponent(termo)}` : this.apiUrl;
+    return this.http.get<any>(url);
   }
 
   buscarPorId(id: number): Observable<AdotanteResponse> {

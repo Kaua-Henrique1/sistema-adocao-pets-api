@@ -35,7 +35,7 @@ export class Home implements OnInit {
 
     forkJoin({
       pets: this.petService.listarDisponiveis(0, 1),
-      adotantes: this.adotanteService.listarTodos(0, 1),
+      adotantes: this.adotanteService.listarTodosAdotantes(0, 1),
     }).subscribe({
       next: ({ pets, adotantes }: any) => {
         this.stats.totalPets = pets?.totalElements ?? 0;

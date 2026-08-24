@@ -52,7 +52,7 @@ export class Pessoas implements OnInit {
     this.carregando = true;
     this.mensagemErro = '';
 
-    this.adotanteService.listarTodos(this.paginaAtual, this.tamanhoPagina).subscribe({
+    this.adotanteService.listarTodosAdotantes(this.paginaAtual, this.tamanhoPagina).subscribe({
       next: (resposta: any) => {
         this.adotantes = [...(resposta?.content ?? [])];
         this.totalPaginas = resposta?.totalPages ?? 0;

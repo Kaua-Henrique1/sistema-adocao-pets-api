@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators'; // <- IMPORTANTE: Não esqueça esta linha
+import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AdotanteRequest, AdotanteResponse } from '../models/domain.model';
 

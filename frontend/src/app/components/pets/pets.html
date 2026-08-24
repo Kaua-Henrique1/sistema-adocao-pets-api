@@ -30,8 +30,10 @@
       </div>
     </div>
 
-    <div class="filter-group reset-group">
-      <button class="btn-secondary" (click)="carregarDisponiveis(0)">Ver Todos Disponíveis</button>
+    <!-- Botões Renomeados e Adicionados -->
+    <div class="filter-group reset-group" style="display: flex; gap: 10px; align-items: flex-end;">
+      <button class="btn-secondary" [style.background-color]="!exibindoAdotados ? '#e2e6ea' : ''" (click)="carregarDisponiveis(0)">Ver pets disponíveis para adoção</button>
+      <button class="btn-secondary" [style.background-color]="exibindoAdotados ? '#e2e6ea' : ''" (click)="carregarAdotados(0)">Ver pets já adotados</button>
     </div>
   </div>
 
@@ -56,11 +58,20 @@
             <p><strong>Sexo:</strong> {{ pet.sexo }}</p>
             <p><strong>Nascimento:</strong> {{ pet.dataNascimento | date:'dd/MM/yyyy' }}</p>
             <p><strong>Peso:</strong> {{ pet.peso }} kg</p>
+            @if (pet.tutorNome) {
+              <p><strong>Adotado por:</strong> {{ pet.tutorNome }}</p>
+            }
           </div>
           <div class="pet-footer">
             <small>📍 {{ pet.endereco?.cidade || 'N/A' }} - {{ pet.endereco?.logradouro || 'N/A' }}</small>
+
             <div style="display: flex; gap: 5px; margin-top: 10px;">
-              <button class="btn-primary" style="background-color: #28a745;" (click)="abrirModalAdocao(pet)">Adotar</button>
+              @if (!pet.tutorId) {
+                <button class="btn-primary" style="background-color: #28a745;" (click)="abrirModalAdocao(pet)">Adotar</button>
+              } @else {
+                <span class="badge" style="background-color: #17a2b8; display: flex; align-items: center; padding: 0 10px;">Adotado</span>
+              }
+
               <button class="btn-primary" (click)="abrirModalEdicao(pet)">Editar</button>
               <button class="btn-danger" (click)="deletarPet(pet)">Deletar</button>
             </div>

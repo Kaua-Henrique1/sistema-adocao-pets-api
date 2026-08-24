@@ -23,6 +23,10 @@ export class PetService {
     return this.http.get<any>(`${this.apiUrl}/disponiveis?page=${page}&size=${size}`);
   }
 
+  listarAdotados(page: number = 0, size: number = 10): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/adotados?page=${page}&size=${size}`);
+  }
+
   listarPorCidade(cidade: string, page: number = 0, size: number = 10): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/cidade/${cidade}?page=${page}&size=${size}`);
   }

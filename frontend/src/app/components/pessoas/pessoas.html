@@ -1,7 +1,10 @@
 <div class="container">
   <header class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h2>Gerenciamento de Adotantes</h2>
-    <button class="btn-secondary" routerLink="/home">← Voltar ao Home</button>
+    <div style="display: flex; gap: 10px;">
+      <button class="btn-primary" (click)="abrirModalCadastro()">+ Novo Adotante</button>
+      <button class="btn-secondary" routerLink="/home">← Voltar ao Home</button>
+    </div>
   </header>
 
   <!-- Filtro por ID -->
@@ -86,12 +89,13 @@
     }
   }
 
+  <!-- Modal de Cadastro / Edição -->
   @if (exibirModalEdicao) {
     <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
       <div style="background: white; padding: 25px; border-radius: 8px; width: 400px; max-width: 90%; max-height: 90vh; overflow-y: auto;">
-        <h3>Editar Adotante #{{ idEmEdicao }}</h3>
+        <h3>{{ idEmEdicao ? 'Editar Adotante #' + idEmEdicao : 'Cadastrar Novo Adotante' }}</h3>
 
-        <form [formGroup]="form" (ngSubmit)="confirmarAtualizacao()">
+        <form [formGroup]="form" (ngSubmit)="salvarAdotante()">
           <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
             <div>
               <label>Nome Completo:</label>
@@ -102,8 +106,18 @@
             </div>
 
             <div>
-              <label>CPF (Não editável):</label>
-              <input type="text" formControlName="cpf" style="width: 100%; box-sizing: border-box; background-color: #e9ecef; cursor: not-allowed;" />
+              <label>CPF {{ idEmEdicao ? '(Não editável)' : '' }}:</label>
+              <input
+                type="text"
+                formControlName="cpf"
+                placeholder="000.000.000-00"
+                style="width: 100%; box-sizing: border-box;"
+                [style.background-color]="idEmEdicao ? '#e9ecef' : '#fff'"
+                [style.cursor]="idEmEdicao ? 'not-allowed' : 'text'"
+              />
+              @if (form.get('cpf')?.touched && form.get('cpf')?.invalid) {
+                <small style="color: red;">Informe um CPF válido.</small>
+              }
             </div>
 
             <div>
@@ -117,7 +131,7 @@
                 style="width: 100%; box-sizing: border-box;"
               />
               @if (form.get('telefone')?.touched && form.get('telefone')?.invalid) {
-                <small style="color: red;">Informe um telefone válido com DDD. Ex: (84) 98866-5779</small>
+                <small style="color: red;">Informe um telefone válido com DDD.</small>
               }
             </div>
 
@@ -160,7 +174,7 @@
 
           <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
             <button type="button" class="btn-secondary" (click)="fecharModal()">Cancelar</button>
-            <button type="submit" class="btn-primary">Salvar Alterações</button>
+            <button type="submit" class="btn-primary">{{ idEmEdicao ? 'Salvar Alterações' : 'Cadastrar' }}</button>
           </div>
         </form>
       </div>

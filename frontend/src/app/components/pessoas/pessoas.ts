@@ -133,6 +133,14 @@ export class Pessoas implements OnInit {
     this.form.get('telefone')?.setValue(valor, { emitEvent: false });
   }
 
+  abrirModalCadastro(): void {
+    this.idEmEdicao = null;
+    this.form.reset();
+    this.form.get('cpf')?.enable();
+    this.exibirModalEdicao = true;
+    this.cdr.detectChanges();
+  }
+
   abrirModalEdicao(adotante: AdotanteResponse): void {
     this.idEmEdicao = adotante.id;
 
@@ -173,13 +181,11 @@ export class Pessoas implements OnInit {
     return valor ? valor.replace(/\D/g, '') : '';
   }
 
-  confirmarAtualizacao(): void {
+  salvarAdotante(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
-
-    if (!this.idEmEdicao) return;
 
     this.carregando = true;
     this.mensagemErro = '';
@@ -192,21 +198,39 @@ export class Pessoas implements OnInit {
       telefone: this.apenasNumeros(rawValue.telefone),
     } as AdotanteRequest;
 
-    this.adotanteService.atualizar(this.idEmEdicao, payload).subscribe({
-      next: () => {
-        this.mensagemSucesso = 'Adotante atualizado com sucesso!';
-        this.fecharModal();
-        this.carregarAdotantes(this.paginaAtual);
-        setTimeout(() => (this.mensagemSucesso = ''), 4000);
-      },
-      error: (err) => {
-        console.error('Erro ao atualizar:', err);
-        this.mensagemErro =
-          err.error?.message || 'Erro ao atualizar dados do adotante. Verifique os campos.';
-        this.carregando = false;
-        this.cdr.detectChanges();
-      },
-    });
+    if (this.idEmEdicao) {
+      this.adotanteService.atualizar(this.idEmEdicao, payload).subscribe({
+        next: () => {
+          this.mensagemSucesso = 'Adotante atualizado com sucesso!';
+          this.fecharModal();
+          this.carregarAdotantes(this.paginaAtual);
+          setTimeout(() => (this.mensagemSucesso = ''), 4000);
+        },
+        error: (err) => {
+          console.error('Erro ao atualizar:', err);
+          this.mensagemErro =
+            err.error?.message || 'Erro ao atualizar dados do adotante. Verifique os campos.';
+          this.carregando = false;
+          this.cdr.detectChanges();
+        },
+      });
+    } else {
+      this.adotanteService.cadastrar(payload).subscribe({
+        next: () => {
+          this.mensagemSucesso = 'Adotante cadastrado com sucesso!';
+          this.fecharModal();
+          this.carregarAdotantes(0); // Volta para a primeira página para ver o novo registro
+          setTimeout(() => (this.mensagemSucesso = ''), 4000);
+        },
+        error: (err) => {
+          console.error('Erro ao cadastrar:', err);
+          this.mensagemErro =
+            err.error?.message || 'Erro ao cadastrar adotante. Verifique os campos.';
+          this.carregando = false;
+          this.cdr.detectChanges();
+        },
+      });
+    }
   }
 
   deletar(id: number): void {

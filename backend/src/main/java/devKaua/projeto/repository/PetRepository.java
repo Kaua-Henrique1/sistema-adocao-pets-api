@@ -16,6 +16,9 @@ public interface PetRepository extends JpaRepository<Pet, Long> {
     // Buscar pets disponíveis para adoção (onde tutor/id_tutor é NULO)
     Page<Pet> findByTutorIsNull(Pageable pageable);
 
+    // Buscar pets disponíveis para adotados
+    Page<Pet> findByTutorIsNotNull(Pageable pageable);
+
     // Buscar todos os pets vinculados a um tutor específico
     List<Pet> findByTutorId(Long tutorId);
 

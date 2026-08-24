@@ -85,6 +85,34 @@ class PetRepositoryTest {
         assertThat(encontrados).isEmpty();
     }
 
+    @Test
+    @DisplayName("Sucesso: Deve retornar pets que possuem tutor (adotados)")
+    void deveRetornarPetsAdotadosComTutor() {
+        Adotante tutor = criarAdotante();
+        entityManager.persist(tutor);
+
+        Pet petAdotado = criarPet("Rex", "Natal");
+        petAdotado.setTutor(tutor);
+        entityManager.persist(petAdotado);
+
+        Page<Pet> paginaEncontrada = petRepository.findByTutorIsNotNull(PageRequest.of(0, 10));
+
+        assertThat(paginaEncontrada.getContent()).isNotEmpty();
+        assertThat(paginaEncontrada.getContent().get(0).getNome()).isEqualTo("Rex");
+        assertThat(paginaEncontrada.getContent().get(0).getTutor()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Vazio: Não deve retornar pets adotados quando houver apenas pets disponíveis")
+    void naoDeveRetornarPetsAdotadosQuandoHouverApenasDisponiveis() {
+        Pet petDisponivel = criarPet("Bolinha", "Natal");
+        entityManager.persist(petDisponivel);
+
+        Page<Pet> paginaEncontrada = petRepository.findByTutorIsNotNull(PageRequest.of(0, 10));
+
+        assertThat(paginaEncontrada.getContent()).isEmpty();
+    }
+
     // --- TESTES PARA: findByEnderecoCidadeIgnoreCase() ---
 
     @Test

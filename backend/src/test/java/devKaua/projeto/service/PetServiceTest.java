@@ -51,6 +51,30 @@ class PetServiceTest {
     @InjectMocks
     private PetService petService;
 
+
+    @Nested
+    @DisplayName("Testes de Listagem de Pets Adotados")
+    class ListarAdotados {
+
+        @Test
+        @DisplayName("Sucesso: Deve retornar página de pets que possuem tutor")
+        void deveListarPetsAdotados() {
+            Pet pet = new Pet();
+            pet.setTutor(new Adotante());
+            PetResponseDTO dto = PetResponseDTO.builder().build();
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Pet> pagePets = new PageImpl<>(List.of(pet));
+
+            when(petRepository.findByTutorIsNotNull(pageable)).thenReturn(pagePets);
+            when(petMapper.toDTO(pet)).thenReturn(dto);
+
+            Page<PetResponseDTO> resultado = petService.listarAdotados(pageable);
+
+            assertThat(resultado.getContent()).hasSize(1);
+            verify(petRepository).findByTutorIsNotNull(pageable);
+        }
+    }
+
     @Nested
     @DisplayName("Testes do Fluxo de Adoção (adotarPet)")
     class AdotarPet {

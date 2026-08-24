@@ -47,6 +47,12 @@ public class PetService {
     }
 
     @Transactional(readOnly = true)
+    public Page<PetResponseDTO> listarAdotados(Pageable pageable) {
+        return petRepository.findByTutorIsNotNull(pageable)
+                .map(petMapper::toDTO);
+    }
+
+    @Transactional(readOnly = true)
     public Page<PetResponseDTO> listarPorCidade(String cidade, Pageable pageable) {
         return petRepository.findByEnderecoCidadeContainingIgnoreCase(cidade, pageable)
                 .map(petMapper::toDTO);

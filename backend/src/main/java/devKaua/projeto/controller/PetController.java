@@ -62,6 +62,15 @@ public class PetController {
         return ResponseEntity.ok(page);
     }
 
+    @Operation(summary = "Listar pets adotados", description = "Retorna de forma paginada todos os pets que já foram adotados.")
+    @ApiResponse(responseCode = "200", description = "Página de pets adotados obtida com sucesso")
+    @GetMapping("/adotados")
+    public ResponseEntity<Page<PetResponseDTO>> listarAdotados(
+            @ParameterObject @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
+        Page<PetResponseDTO> page = petService.listarAdotados(pageable);
+        return ResponseEntity.ok(page);
+    }
+
     @Operation(summary = "Listar pets por cidade", description = "Filtra e retorna os pets cadastrados em uma determinada cidade com paginação.")
     @ApiResponse(responseCode = "200", description = "Página de pets da cidade consultada")
     @GetMapping("/cidade/{cidade}")

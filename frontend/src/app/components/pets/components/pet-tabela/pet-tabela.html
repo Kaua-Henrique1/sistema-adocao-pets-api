@@ -1,0 +1,179 @@
+<div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <!-- Cabeçalho -->
+      <thead>
+      <tr class="bg-slate-50/70 border-b border-slate-100 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+        <th scope="col" class="py-3.5 px-4 pl-6">#ID</th>
+        <th scope="col" class="py-3.5 px-4">Nome</th>
+        <th scope="col" class="py-3.5 px-4">Tipo</th>
+        <th scope="col" class="py-3.5 px-4">Raça</th>
+        <th scope="col" class="py-3.5 px-4">Sexo</th>
+        <th scope="col" class="py-3.5 px-4">Cidade</th>
+        <th scope="col" class="py-3.5 px-4">Status</th>
+        <th scope="col" class="py-3.5 px-4 pr-6 text-center">Ações</th>
+      </tr>
+      </thead>
+
+      <!-- Corpo da Tabela -->
+      <tbody class="divide-y divide-slate-100 text-sm text-slate-600">
+
+      <!-- Spinner de Carregamento -->
+      <tr *ngIf="carregando">
+        <td colspan="8" class="text-center py-12">
+          <div class="inline-flex flex-col items-center gap-3">
+            <svg class="animate-spin h-7 w-7 text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-xs font-medium text-slate-400">Carregando pets...</span>
+          </div>
+        </td>
+      </tr>
+
+      <!-- Lista Vazia -->
+      <tr *ngIf="!carregando && pets.length === 0">
+        <td colspan="8" class="text-center py-12 text-slate-400 text-sm">
+          Nenhum pet encontrado.
+        </td>
+      </tr>
+
+      <!-- Linhas dos Pets -->
+      <tr *ngFor="let pet of pets" class="hover:bg-slate-50/60 transition-colors">
+        <!-- ID -->
+        <td class="py-3.5 px-4 pl-6 font-semibold text-slate-800">
+          #{{ pet.id }}
+        </td>
+
+        <!-- Nome -->
+        <td class="py-3.5 px-4 font-semibold text-slate-800 capitalize">
+          {{ pet.nome }}
+        </td>
+
+        <!-- Tipo -->
+        <td class="py-3.5 px-4 font-medium text-slate-600">
+          {{ pet.tipo }}
+        </td>
+
+        <!-- Raça -->
+        <td class="py-3.5 px-4 text-slate-500">
+          {{ pet.raca || 'N/A' }}
+        </td>
+
+        <!-- Sexo -->
+        <td class="py-3.5 px-4 text-slate-500">
+          {{ pet.sexo }}
+        </td>
+
+        <!-- Cidade -->
+        <td class="py-3.5 px-4 text-slate-500">
+          {{ pet.endereco?.cidade || 'Não informada' }}
+        </td>
+
+        <!-- Status Destaque -->
+        <td class="py-3.5 px-4">
+            <span
+              [ngClass]="pet.tutorId
+                ? 'bg-slate-100 text-slate-600 border-slate-200'
+                : 'bg-emerald-50 text-emerald-700 border-emerald-200/70'"
+              class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border shadow-2xs">
+              <!-- Bolinha de indicação -->
+              <span
+                [ngClass]="pet.tutorId ? 'bg-slate-400' : 'bg-emerald-500'"
+                class="w-1.5 h-1.5 rounded-full"></span>
+              {{ pet.tutorId ? 'Adotado' : 'Disponível' }}
+            </span>
+        </td>
+
+        <!-- Botões de Ações (Ícone + Nome abaixo) -->
+        <td class="py-2 px-4 pr-6">
+          <div class="flex items-center justify-center gap-1">
+
+            <!-- Ver Detalhes -->
+            <button
+              type="button"
+              (click)="verDetalhes.emit(pet)"
+              class="flex flex-col items-center justify-center p-1.5 min-w-[48px] rounded-xl text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-all group"
+              title="Ver Detalhes">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:scale-110 transition-transform">
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <span class="text-[10px] font-medium leading-tight mt-0.5">Detalhes</span>
+            </button>
+
+            <!-- Adotar (Visível somente se o pet NÃO estiver adotado) -->
+            <button
+              *ngIf="!pet.tutorId"
+              type="button"
+              (click)="adotar.emit(pet)"
+              class="flex flex-col items-center justify-center p-1.5 min-w-[48px] rounded-xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all group"
+              title="Registrar Adoção">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:scale-110 transition-transform">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+              </svg>
+              <span class="text-[10px] font-medium leading-tight mt-0.5">Adotar</span>
+            </button>
+
+            <!-- Editar -->
+            <button
+              type="button"
+              (click)="editar.emit(pet)"
+              class="flex flex-col items-center justify-center p-1.5 min-w-[48px] rounded-xl text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-all group"
+              title="Editar Pet">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:scale-110 transition-transform">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                <path d="m15 5 4 4"/>
+              </svg>
+              <span class="text-[10px] font-medium leading-tight mt-0.5">Editar</span>
+            </button>
+
+            <!-- Excluir -->
+            <button
+              type="button"
+              (click)="remover.emit(pet)"
+              class="flex flex-col items-center justify-center p-1.5 min-w-[48px] rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all group"
+              title="Remover Pet">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:scale-110 transition-transform">
+                <path d="M3 6h18"/>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+              </svg>
+              <span class="text-[10px] font-medium leading-tight mt-0.5">Excluir</span>
+            </button>
+
+          </div>
+        </td>
+      </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginação -->
+  <div
+    *ngIf="totalPaginas > 1"
+    class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
+    <span class="text-xs font-medium text-slate-500">
+      Página <strong class="text-slate-800">{{ paginaAtual + 1 }}</strong> de <strong class="text-slate-800">{{ totalPaginas }}</strong>
+    </span>
+
+    <div class="inline-flex items-center gap-2">
+      <button
+        type="button"
+        [disabled]="paginaAtual === 0"
+        (click)="mudarPagina.emit(paginaAtual - 1)"
+        class="px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-colors">
+        Anterior
+      </button>
+
+      <button
+        type="button"
+        [disabled]="paginaAtual >= totalPaginas - 1"
+        (click)="mudarPagina.emit(paginaAtual + 1)"
+        class="px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-colors">
+        Próxima
+      </button>
+    </div>
+  </div>
+</div>

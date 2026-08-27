@@ -1,16 +1,30 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 import { PetService } from '../../services/pet';
 import { AdotanteService } from '../../services/adotante';
 import { PetResponse, PetRequest, AdotanteResponse } from '../../models/domain.model';
 
+import { PetFiltros } from './components/pet-filtros/pet-filtros';
+import { PetTabela } from './components/pet-tabela/pet-tabela';
+import { ModalDetalhes } from './components/modal-detalhes/modal-detalhes';
+import { ModalEdicaoCadastro } from './components/modal-edicao-cadastro/modal-edicao-cadastro';
+
+import { ModalAdocao } from './components/modal-adocao/modal-adocao';
+
 @Component({
   selector: 'app-pets',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    FormsModule,
+    PetFiltros,
+    PetTabela,
+    ModalDetalhes,
+    ModalEdicaoCadastro,
+    ModalAdocao,
+  ],
   templateUrl: './pets.html',
   styleUrls: ['./pets.css'],
 })
@@ -19,177 +33,41 @@ export class Pets implements OnInit {
   private adotanteService = inject(AdotanteService);
   private cdr = inject(ChangeDetectorRef);
 
+  // --- ESTADO GLOBAL DA PÁGINA ---
   pets: PetResponse[] = [];
   carregando = false;
   mensagemErro = '';
   mensagemSucesso = '';
 
+  // --- FILTROS E PAGINAÇÃO ---
   termoCidade = '';
   termoId: number | null = null;
   exibindoAdotados = false;
-
-  // Estados dos Modais
-  exibirModalEdicao = false;
-  exibirModalCadastro = false;
-  exibirModalAdocao = false;
-
-  idEmEdicao: number | null = null;
-  petParaAdotar: PetResponse | null = null;
-  adotanteIdInput: number | null = null;
-
-  // Estado da Busca e Seleção de Adotantes
-  termoBuscaAdotante = '';
-  adotantesEncontrados: AdotanteResponse[] = [];
-  adotanteSelecionado: AdotanteResponse | null = null;
-  carregandoAdotantes = false;
-
-  petForm: PetRequest = this.getFormVazio();
-  novoPetForm: PetRequest = this.getFormVazio();
-
   paginaAtual = 0;
   totalPaginas = 0;
   totalElementos = 0;
+
+  // --- VISIBILIDADE DOS MODAIS ---
+  exibirModalEdicaoCadastro = false;
+  exibirModalAdocao = false;
+  exibirModalDetalhes = false;
+
+  // --- ENTIDADES SELECIONADAS ---
+  petSelecionadoEdicao: PetResponse | null = null;
+  petSelecionadoAdocao: PetResponse | null = null;
+  petSelecionadoDetalhes: PetResponse | null = null;
+  tutorDetalhes: AdotanteResponse | null = null;
 
   ngOnInit(): void {
     this.carregarDisponiveis();
   }
 
-  private getFormVazio(): PetRequest {
-    return {
-      nome: '',
-      tipo: 'CACHORRO',
-      sexo: 'MACHO',
-      raca: '',
-      dataNascimento: new Date().toISOString().split('T')[0],
-      peso: 0.5,
-      endereco: { logradouro: '', numero: '', cidade: '' },
-    };
-  }
-
-  carregarDisponiveis(pagina: number = 0): void {
-    this.termoCidade = '';
-    this.termoId = null;
-    this.paginaAtual = pagina;
-    this.exibindoAdotados = false;
-    this.carregando = true;
-    this.mensagemErro = '';
-    this.cdr.markForCheck();
-
-    this.petService.listarDisponiveis(this.paginaAtual, 10).pipe(
-      finalize(() => {
-        this.carregando = false;
-        this.cdr.markForCheck();
-      })
-    ).subscribe({
-      next: (resposta: any) => {
-        const lista = resposta?.content ?? (Array.isArray(resposta) ? resposta : []);
-        this.pets = [...lista];
-        this.totalPaginas = resposta?.totalPages ?? 0;
-        this.totalElementos = resposta?.totalElements ?? 0;
-      },
-      error: () => {
-        this.mensagemErro = 'Erro ao carregar pets disponíveis.';
-        this.pets = [];
-      },
-    });
-  }
-
-  carregarAdotados(pagina: number = 0): void {
-    this.termoCidade = '';
-    this.termoId = null;
-    this.paginaAtual = pagina;
-    this.exibindoAdotados = true;
-    this.carregando = true;
-    this.mensagemErro = '';
-    this.cdr.markForCheck();
-
-    this.petService.listarAdotados(this.paginaAtual, 10).pipe(
-      finalize(() => {
-        this.carregando = false;
-        this.cdr.markForCheck();
-      })
-    ).subscribe({
-      next: (resposta: any) => {
-        const lista = resposta?.content ?? (Array.isArray(resposta) ? resposta : []);
-        this.pets = [...lista];
-        this.totalPaginas = resposta?.totalPages ?? 0;
-        this.totalElementos = resposta?.totalElements ?? 0;
-      },
-      error: () => {
-        this.mensagemErro = 'Erro ao carregar pets adotados (Verifique se o endpoint /adotados existe no backend).';
-        this.pets = [];
-      },
-    });
-  }
-
-  buscarPorCidade(pagina: number = 0): void {
-    this.termoId = null;
-    this.mensagemErro = '';
-
-    const cidadeLimpa = this.termoCidade.trim();
-    if (!cidadeLimpa) {
-      this.exibindoAdotados ? this.carregarAdotados() : this.carregarDisponiveis();
-      return;
-    }
-
-    this.paginaAtual = pagina;
-    this.carregando = true;
-    this.cdr.markForCheck();
-
-    this.petService.listarPorCidade(encodeURIComponent(cidadeLimpa), this.paginaAtual, 10).pipe(
-      finalize(() => {
-        this.carregando = false;
-        this.cdr.markForCheck();
-      })
-    ).subscribe({
-      next: (resposta: any) => {
-        const lista = resposta?.content ?? (Array.isArray(resposta) ? resposta : []);
-        this.pets = [...lista];
-        this.totalPaginas = resposta?.totalPages ?? 0;
-        this.totalElementos = resposta?.totalElements ?? 0;
-      },
-      error: (err) => {
-        this.pets = [];
-        if (err.status !== 404) {
-          this.mensagemErro = 'Erro ao conectar com o servidor para a busca por cidade.';
-        }
-      },
-    });
-  }
-
-  buscarPorId(): void {
-    this.termoCidade = '';
-    this.mensagemErro = '';
-
-    if (!this.termoId) {
-      this.exibindoAdotados ? this.carregarAdotados() : this.carregarDisponiveis();
-      return;
-    }
-
-    this.carregando = true;
-    this.cdr.markForCheck();
-
-    this.petService.buscarPorId(this.termoId).pipe(
-      finalize(() => {
-        this.carregando = false;
-        this.cdr.markForCheck();
-      })
-    ).subscribe({
-      next: (dado) => {
-        this.pets = dado ? [dado] : [];
-      },
-      error: () => {
-        this.mensagemErro = `Pet com ID #${this.termoId} não encontrado.`;
-        this.pets = [];
-      },
-    });
-  }
-
+  // --- MÉTODOS DE REFRESH / ATUALIZAÇÃO DA LISTA ---
   atualizarLista(): void {
     if (this.termoId) {
-      this.buscarPorId();
-    } else if (this.termoCidade.trim()) {
-      this.buscarPorCidade(this.paginaAtual);
+      this.buscarPorId(this.termoId);
+    } else if (this.termoCidade) {
+      this.buscarPorCidade(this.termoCidade, this.paginaAtual);
     } else if (this.exibindoAdotados) {
       this.carregarAdotados(this.paginaAtual);
     } else {
@@ -197,238 +75,194 @@ export class Pets implements OnInit {
     }
   }
 
-  // --- MODAL DE ADOÇÃO COM FILTRO E CONFIRMAÇÃO ---
-  abrirModalAdocao(pet: PetResponse): void {
-    this.petParaAdotar = pet;
-    this.termoBuscaAdotante = '';
-    this.adotantesEncontrados = [];
-    this.adotanteSelecionado = null;
-    this.adotanteIdInput = null;
-    this.mensagemErro = '';
-    this.exibirModalAdocao = true;
-    this.buscarAdotantes();
+  // --- CONSULTAS E API ---
+  carregarDisponiveis(pagina: number = 0): void {
+    this.termoCidade = '';
+    this.termoId = null;
+    this.paginaAtual = pagina;
+    this.exibindoAdotados = false;
+    this.executarConsulta(() => this.petService.listarDisponiveis(this.paginaAtual, 10));
   }
 
-  fecharModalAdocao(): void {
-    this.exibirModalAdocao = false;
-    this.petParaAdotar = null;
-    this.adotanteSelecionado = null;
-    this.adotanteIdInput = null;
-    this.adotantesEncontrados = [];
-    this.termoBuscaAdotante = '';
-    this.mensagemErro = '';
+  carregarAdotados(pagina: number = 0): void {
+    this.termoCidade = '';
+    this.termoId = null;
+    this.paginaAtual = pagina;
+    this.exibindoAdotados = true;
+    this.executarConsulta(() => this.petService.listarAdotados(this.paginaAtual, 10));
   }
 
-  buscarAdotantes(): void {
-    this.carregandoAdotantes = true;
-    this.mensagemErro = '';
-    this.cdr.markForCheck();
+  buscarPorCidade(cidade: string, pagina: number = 0): void {
+    this.termoCidade = cidade.trim();
+    this.termoId = null;
 
-    this.adotanteService.listar(this.termoBuscaAdotante.trim()).pipe(
-      finalize(() => {
-        this.carregandoAdotantes = false;
-        this.cdr.markForCheck();
-      })
-    ).subscribe({
-      next: (resposta: any) => {
-        const lista = resposta?.content ?? (Array.isArray(resposta) ? resposta : []);
-        this.adotantesEncontrados = [...lista];
-      },
-      error: () => {
-        this.adotantesEncontrados = [];
-      },
-    });
-  }
-
-  selecionarAdotante(adotante: AdotanteResponse): void {
-    this.adotanteSelecionado = adotante;
-    this.adotanteIdInput = adotante.id;
-  }
-
-  confirmarAdocao(): void {
-    if (!this.petParaAdotar || !this.adotanteSelecionado) {
-      this.mensagemErro = 'Selecione um adotante na lista para continuar.';
+    if (!this.termoCidade) {
+      this.exibindoAdotados ? this.carregarAdotados() : this.carregarDisponiveis();
       return;
     }
 
-    const mensagemConfirmacao = `Confirmar a adoção do pet "${this.petParaAdotar.nome}" (#${this.petParaAdotar.id}) para o adotante "${this.adotanteSelecionado.nome}" (CPF: ${this.adotanteSelecionado.cpf})?`;
+    this.paginaAtual = pagina;
+    this.executarConsulta(() =>
+      this.petService.listarPorCidade(encodeURIComponent(this.termoCidade), this.paginaAtual, 10),
+    );
+  }
 
-    if (confirm(mensagemConfirmacao)) {
-      this.mensagemErro = '';
-      this.cdr.markForCheck();
+  buscarPorId(id: number | null): void {
+    this.termoId = id;
+    this.termoCidade = '';
 
-      this.petService.adotar(this.petParaAdotar.id, this.adotanteSelecionado.id).subscribe({
-        next: (petAdotado) => {
-          this.mensagemSucesso = `Adoção realizada com sucesso! O pet "${petAdotado.nome}" foi adotado por ${this.adotanteSelecionado?.nome}.`;
-          this.fecharModalAdocao();
-          this.atualizarLista();
+    if (!id) {
+      this.exibindoAdotados ? this.carregarAdotados() : this.carregarDisponiveis();
+      return;
+    }
 
-          setTimeout(() => {
-            this.mensagemSucesso = '';
-            this.cdr.markForCheck();
-          }, 4000);
-        },
-        error: (err) => {
-          if (err.status === 404) {
-            this.mensagemErro = 'Pet ou Adotante não encontrado no sistema.';
-          } else if (err.status === 400) {
-            this.mensagemErro = 'Este pet já foi adotado ou a requisição é inválida.';
-          } else {
-            this.mensagemErro = 'Erro ao processar adoção. Tente novamente.';
-          }
+    this.carregando = true;
+    this.mensagemErro = '';
+    this.cdr.markForCheck();
+
+    this.petService
+      .buscarPorId(id)
+      .pipe(
+        finalize(() => {
+          this.carregando = false;
           this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: (dado) => (this.pets = dado ? [dado] : []),
+        error: () => {
+          this.mensagemErro = `Pet com ID #${id} não encontrado.`;
+          this.pets = [];
         },
       });
-    }
   }
 
-  // --- MODAL DE CADASTRO ---
-  abrirModalCadastro(): void {
-    this.novoPetForm = this.getFormVazio();
+  private executarConsulta(requestFn: () => any): void {
+    this.carregando = true;
     this.mensagemErro = '';
-    this.exibirModalCadastro = true;
-  }
+    this.cdr.markForCheck();
 
-  fecharModalCadastro(): void {
-    this.exibirModalCadastro = false;
-    this.novoPetForm = this.getFormVazio();
-    this.mensagemErro = '';
-  }
-
-  cadastrarPet(): void {
-    this.mensagemErro = '';
-    const logradouroLimpo = (this.novoPetForm.endereco?.logradouro || '').replace(/[0-9]/g, '').trim();
-
-    const payload: PetRequest = {
-      nome: this.novoPetForm.nome?.trim(),
-      tipo: this.novoPetForm.tipo,
-      sexo: this.novoPetForm.sexo,
-      raca: this.novoPetForm.raca?.trim(),
-      dataNascimento: this.novoPetForm.dataNascimento,
-      peso: Number(this.novoPetForm.peso),
-      endereco: {
-        logradouro: logradouroLimpo,
-        numero: this.novoPetForm.endereco?.numero?.trim(),
-        cidade: this.novoPetForm.endereco?.cidade?.trim(),
-      },
-    };
-
-    this.petService.cadastrar(payload).subscribe({
-      next: (petCadastrado: PetResponse) => {
-        this.mensagemSucesso = `Pet "${petCadastrado.nome}" cadastrado com sucesso!`;
-        this.fecharModalCadastro();
-        this.atualizarLista();
-
-        setTimeout(() => {
-          this.mensagemSucesso = '';
+    requestFn()
+      .pipe(
+        finalize(() => {
+          this.carregando = false;
           this.cdr.markForCheck();
-        }, 4000);
+        }),
+      )
+      .subscribe({
+        next: (resposta: any) => {
+          const lista = resposta?.content ?? (Array.isArray(resposta) ? resposta : []);
+          this.pets = [...lista];
+          this.totalPaginas = resposta?.totalPages ?? 0;
+          this.totalElementos = resposta?.totalElements ?? 0;
+        },
+        error: () => {
+          this.mensagemErro = 'Erro ao carregar lista de pets.';
+          this.pets = [];
+        },
+      });
+  }
+
+  // --- AÇÕES DE MODAIS E CRUD ---
+  abrirModalNovoPet(): void {
+    this.petSelecionadoEdicao = null;
+    this.exibirModalEdicaoCadastro = true;
+  }
+
+  abrirModalEditarPet(pet: PetResponse): void {
+    this.petSelecionadoEdicao = pet;
+    this.exibirModalEdicaoCadastro = true;
+  }
+
+  fecharModalEdicaoCadastro(): void {
+    this.exibirModalEdicaoCadastro = false;
+    this.petSelecionadoEdicao = null;
+  }
+
+  salvarPet(payload: PetRequest): void {
+    this.mensagemErro = '';
+    this.cdr.detectChanges();
+
+    const acao$ = this.petSelecionadoEdicao
+      ? this.petService.atualizar(this.petSelecionadoEdicao.id, payload)
+      : this.petService.cadastrar(payload);
+
+    acao$.subscribe({
+      next: () => {
+        this.fecharModalEdicaoCadastro();
+        this.carregarDisponiveis();
       },
       error: (err) => {
-        if (Array.isArray(err.error) && err.error.length > 0) {
-          this.mensagemErro = `Erro em ${err.error[0].campo}: ${err.error[0].mensagem}`;
-        } else {
-          this.mensagemErro = 'Erro ao cadastrar o pet.';
+        if (err.error?.errors && Array.isArray(err.error.errors)) {
+          this.mensagemErro = err.error.errors
+            .map((e: any) => e.defaultMessage || e.message)
+            .join(' | ');
         }
-        this.cdr.markForCheck();
+        else if (err.error?.message) {
+          this.mensagemErro = err.error.message;
+        }
+        else {
+          this.mensagemErro = 'Ocorreu um erro ao salvar as informações.';
+        }
       },
     });
   }
 
-  // --- MODAL DE EDIÇÃO ---
-  abrirModalEdicao(pet: PetResponse): void {
-    this.idEmEdicao = pet.id;
-    this.mensagemErro = '';
-    this.petForm = {
-      nome: pet.nome || '',
-      tipo: pet.tipo || 'CACHORRO',
-      sexo: pet.sexo || 'MACHO',
-      raca: pet.raca || 'SRD',
-      dataNascimento: pet.dataNascimento || new Date().toISOString().split('T')[0],
-      peso: pet.peso && pet.peso >= 0.5 ? pet.peso : 0.5,
-      endereco: {
-        logradouro: pet.endereco?.logradouro || '',
-        numero: pet.endereco?.numero || '',
-        cidade: pet.endereco?.cidade || '',
-      },
-    };
-    this.exibirModalEdicao = true;
-  }
+  abrirModalDetalhes(pet: PetResponse): void {
+    this.petSelecionadoDetalhes = pet;
+    this.tutorDetalhes = null;
+    this.exibirModalDetalhes = true;
 
-  fecharModal(): void {
-    this.exibirModalEdicao = false;
-    this.idEmEdicao = null;
-    this.petForm = this.getFormVazio();
-    this.mensagemErro = '';
-  }
-
-  confirmarAtualizacao(): void {
-    if (!this.idEmEdicao) return;
-    this.mensagemErro = '';
-
-    const logradouroLimpo = (this.petForm.endereco?.logradouro || '').replace(/[0-9]/g, '').trim();
-
-    const payload: PetRequest = {
-      nome: this.petForm.nome?.trim(),
-      tipo: this.petForm.tipo,
-      sexo: this.petForm.sexo,
-      raca: this.petForm.raca?.trim(),
-      dataNascimento: this.petForm.dataNascimento,
-      peso: Number(this.petForm.peso),
-      endereco: {
-        logradouro: logradouroLimpo,
-        numero: this.petForm.endereco?.numero?.trim(),
-        cidade: this.petForm.endereco?.cidade?.trim(),
-      },
-    };
-
-    if (confirm(`Tem certeza que deseja atualizar "${payload.nome}"?`)) {
-      this.petService.atualizar(this.idEmEdicao, payload).subscribe({
-        next: (petAtualizado: PetResponse) => {
-          this.mensagemSucesso = 'Pet atualizado com sucesso!';
-          const index = this.pets.findIndex((p) => p.id === this.idEmEdicao);
-          if (index !== -1) {
-            this.pets[index] = { ...petAtualizado };
-            this.pets = [...this.pets];
-          } else {
-            this.atualizarLista();
-          }
-          this.fecharModal();
-          this.cdr.markForCheck();
-
-          setTimeout(() => {
-            this.mensagemSucesso = '';
-            this.cdr.markForCheck();
-          }, 4000);
-        },
-        error: (err) => {
-          if (Array.isArray(err.error) && err.error.length > 0) {
-            this.mensagemErro = `Erro em ${err.error[0].campo}: ${err.error[0].mensagem}`;
-          } else {
-            this.mensagemErro = 'Erro ao atualizar o pet.';
-          }
+    if (pet.tutorId) {
+      this.adotanteService.buscarPorId(pet.tutorId).subscribe({
+        next: (adotante) => {
+          this.tutorDetalhes = adotante;
           this.cdr.markForCheck();
         },
       });
     }
+  }
+
+  adotarPet(event: { petId: number; adotanteId: number }): void {
+    this.petService.adotar(event.petId, event.adotanteId).subscribe({
+      next: () => {
+        this.exibirSucesso('Adoção realizada com sucesso!');
+        this.exibirModalAdocao = false;
+        this.petSelecionadoAdocao = null;
+        this.atualizarLista();
+      },
+      error: (err) => this.tratarErro(err, 'Erro ao processar adoção.'),
+    });
   }
 
   deletarPet(pet: PetResponse): void {
-    if (confirm(`Deseja realmente remover o pet "${pet.nome}" (ID: #${pet.id}) do sistema?`)) {
+    if (confirm(`Deseja realmente remover o pet "${pet.nome}" (#${pet.id})?`)) {
       this.petService.deletar(pet.id).subscribe({
         next: () => {
-          this.mensagemSucesso = 'Pet removido com sucesso!';
+          this.exibirSucesso('Pet removido com sucesso!');
           this.atualizarLista();
-          setTimeout(() => {
-            this.mensagemSucesso = '';
-            this.cdr.markForCheck();
-          }, 4000);
         },
-        error: () => {
-          this.mensagemErro = 'Erro ao deletar o pet.';
-          this.cdr.markForCheck();
-        }
+        error: () => this.tratarErro(null, 'Erro ao deletar o pet.'),
       });
     }
+  }
+
+  // --- UTILS ---
+  private exibirSucesso(msg: string): void {
+    this.mensagemSucesso = msg;
+    this.cdr.markForCheck();
+    setTimeout(() => {
+      this.mensagemSucesso = '';
+      this.cdr.markForCheck();
+    }, 4000);
+  }
+
+  private tratarErro(err: any, msgPadrao: string): void {
+    if (Array.isArray(err?.error) && err.error.length > 0) {
+      this.mensagemErro = `Erro em ${err.error[0].campo}: ${err.error[0].mensagem}`;
+    } else {
+      this.mensagemErro = msgPadrao;
+    }
+    this.cdr.markForCheck();
   }
 }

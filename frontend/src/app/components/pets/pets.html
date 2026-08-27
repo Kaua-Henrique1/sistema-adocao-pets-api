@@ -1,256 +1,98 @@
-<div class="container">
-  <header class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <h2>Encontre um Pet</h2>
-    <div style="display: flex; gap: 10px;">
-      <button class="btn-primary" (click)="abrirModalCadastro()">+ Novo Pet</button>
-      <button class="btn-secondary" routerLink="/home">← Voltar ao Home</button>
-    </div>
-  </header>
+<div class="container mx-auto p-4 sm:p-6 max-w-7xl space-y-6">
 
-  <!-- Painel de Filtros -->
-  <div class="filters-card">
-    <div class="filter-group">
-      <label>Buscar por ID:</label>
-      <div class="input-action">
-        <input type="number" [(ngModel)]="termoId" (keyup.enter)="buscarPorId()" placeholder="Ex: 1" />
-        <button class="btn-primary" (click)="buscarPorId()">Buscar</button>
-      </div>
+  <!-- Cabeçalho Principal -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+    <div>
+      <h2 class="text-2xl font-bold tracking-tight text-slate-800">
+        Gestão de Pets
+      </h2>
+      <p class="text-xs text-slate-400 font-normal mt-0.5">
+        Gerencie o cadastro, edições e adoções dos animais cadastrados
+      </p>
     </div>
 
-    <div class="filter-group">
-      <label>Buscar por Cidade:</label>
-      <div class="input-action">
-        <input
-          type="text"
-          [(ngModel)]="termoCidade"
-          (keyup.enter)="buscarPorCidade(0)"
-          placeholder="Ex: Parnami"
-        />
-        <button class="btn-primary" (click)="buscarPorCidade(0)">Filtrar</button>
-      </div>
-    </div>
-
-    <!-- Botões Renomeados e Adicionados -->
-    <div class="filter-group reset-group" style="display: flex; gap: 10px; align-items: flex-end;">
-      <button class="btn-secondary" [style.background-color]="!exibindoAdotados ? '#e2e6ea' : ''" (click)="carregarDisponiveis(0)">Ver pets disponíveis para adoção</button>
-      <button class="btn-secondary" [style.background-color]="exibindoAdotados ? '#e2e6ea' : ''" (click)="carregarAdotados(0)">Ver pets já adotados</button>
-    </div>
+    <button
+      type="button"
+      (click)="abrirModalNovoPet()"
+      class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-slate-800 hover:bg-slate-900 active:scale-95 text-white text-sm font-medium shadow-sm hover:shadow transition-all duration-150 shrink-0">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      <span>Cadastrar Pet</span>
+    </button>
   </div>
 
-  <!-- Mensagens Globais -->
-  @if (carregando) { <p class="loading">Buscando pets...</p> }
-  @if (mensagemErro && !exibirModalEdicao && !exibirModalCadastro && !exibirModalAdocao) {
-    <p class="alert error">{{ mensagemErro }}</p>
-  }
-  @if (mensagemSucesso) { <p class="alert success">{{ mensagemSucesso }}</p> }
-
-  <!-- Grid de Pets -->
-  @if (!carregando) {
-    <div class="pets-grid">
-      @for (pet of pets; track pet.id) {
-        <div class="pet-card">
-          <div class="pet-header">
-            <h3>#{{ pet.id }} - {{ pet.nome }}</h3>
-            <span class="badge" [class.gato]="pet.tipo === 'GATO'">{{ pet.tipo }}</span>
-          </div>
-          <div class="pet-body">
-            <p><strong>Raça:</strong> {{ pet.raca }}</p>
-            <p><strong>Sexo:</strong> {{ pet.sexo }}</p>
-            <p><strong>Nascimento:</strong> {{ pet.dataNascimento | date:'dd/MM/yyyy' }}</p>
-            <p><strong>Peso:</strong> {{ pet.peso }} kg</p>
-            @if (pet.tutorNome) {
-              <p><strong>Adotado por:</strong> {{ pet.tutorNome }}</p>
-            }
-          </div>
-          <div class="pet-footer">
-            <small>📍 {{ pet.endereco?.cidade || 'N/A' }} - {{ pet.endereco?.logradouro || 'N/A' }}</small>
-
-            <div style="display: flex; gap: 5px; margin-top: 10px;">
-              @if (!pet.tutorId) {
-                <button class="btn-primary" style="background-color: #28a745;" (click)="abrirModalAdocao(pet)">Adotar</button>
-              } @else {
-                <span class="badge" style="background-color: #17a2b8; display: flex; align-items: center; padding: 0 10px;">Adotado</span>
-              }
-
-              <button class="btn-primary" (click)="abrirModalEdicao(pet)">Editar</button>
-              <button class="btn-danger" (click)="deletarPet(pet)">Deletar</button>
-            </div>
-          </div>
-        </div>
-      } @empty {
-        <p class="text-center">Nenhum pet encontrado com os filtros informados.</p>
-      }
+  <!-- Banners Globais com estilo Tailwind -->
+  @if (mensagemSucesso) {
+    <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200/60 text-emerald-800 text-sm font-medium flex items-center gap-3 animate-in fade-in">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-emerald-600">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      <span>{{ mensagemSucesso }}</span>
     </div>
   }
 
-  <!-- Modal de Adoção -->
-  @if (exibirModalAdocao && petParaAdotar) {
-    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
-      <div style="background: white; padding: 25px; border-radius: 8px; width: 500px; max-width: 90%; max-height: 90vh; overflow-y: auto;">
-        <h3>Processo de Adoção</h3>
-        <p>Adoção do Pet: <strong>{{ petParaAdotar.nome }}</strong> (#{{ petParaAdotar.id }})</p>
-
-        @if (mensagemErro) {
-          <p class="alert error" style="margin-bottom: 15px;">{{ mensagemErro }}</p>
-        }
-
-        <div style="display: flex; gap: 10px; margin-top: 15px; margin-bottom: 15px;">
-          <input
-            type="text"
-            [(ngModel)]="termoBuscaAdotante"
-            (keyup.enter)="buscarAdotantes()"
-            placeholder="Filtrar por nome do adotante..."
-            style="flex: 1;"
-          />
-          <button class="btn-primary" (click)="buscarAdotantes()">Buscar</button>
-        </div>
-
-        <label><strong>Selecione o Adotante:</strong></label>
-        <div style="max-height: 180px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px; padding: 5px;">
-          @if (carregandoAdotantes) {
-            <p style="padding: 10px; text-align: center;">Carregando adotantes...</p>
-          } @else {
-            @for (adotante of adotantesEncontrados; track adotante.id) {
-              <div
-                (click)="selecionarAdotante(adotante)"
-                [style.background-color]="adotanteSelecionado?.id === adotante.id ? '#e3f2fd' : 'transparent'"
-                [style.border-left]="adotanteSelecionado?.id === adotante.id ? '4px solid #0d6efd' : 'none'"
-                style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;"
-              >
-                <div>
-                  <strong>#{{ adotante.id }} - {{ adotante.nome }}</strong><br />
-                  <small style="color: #666;">CPF: {{ adotante.cpf }} | Cidade: {{ adotante.endereco?.cidade }}</small>
-                </div>
-                @if (adotanteSelecionado?.id === adotante.id) {
-                  <span style="color: #0d6efd; font-weight: bold;">✓ Selecionado</span>
-                }
-              </div>
-            } @empty {
-              <p style="padding: 10px; text-align: center; color: #777;">Nenhum adotante encontrado.</p>
-            }
-          }
-        </div>
-
-        @if (adotanteSelecionado) {
-          <div style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; border: 1px dashed #28a745;">
-            <small style="color: #28a745; font-weight: bold;">Adotante Selecionado:</small>
-            <p style="margin: 0; font-size: 14px;"><strong>{{ adotanteSelecionado.nome }}</strong> (CPF: {{ adotanteSelecionado.cpf }})</p>
-          </div>
-        }
-
-        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-          <button class="btn-secondary" (click)="fecharModalAdocao()">Cancelar</button>
-          <button
-            class="btn-primary"
-            style="background-color: #28a745;"
-            [disabled]="!adotanteSelecionado"
-            [style.opacity]="!adotanteSelecionado ? '0.5' : '1'"
-            (click)="confirmarAdocao()"
-          >
-            Confirmar Adoção
-          </button>
-        </div>
-      </div>
+  @if (mensagemErro) {
+    <div class="p-4 rounded-2xl bg-red-50 border border-red-200/60 text-red-800 text-sm font-medium flex items-center gap-3 animate-in fade-in">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-red-600">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" x2="12" y1="8" y2="12"/>
+        <line x1="12" x2="12.01" y1="16" y2="16"/>
+      </svg>
+      <span>{{ mensagemErro }}</span>
     </div>
   }
 
-  <!-- Modal de Edição -->
-  @if (exibirModalEdicao) {
-    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
-      <div style="background: white; padding: 25px; border-radius: 8px; width: 400px; max-width: 90%; max-height: 90vh; overflow-y: auto;">
-        <h3>Editar Pet #{{ idEmEdicao }}</h3>
+  <!-- Filtros -->
+  <app-pet-filtros
+    [exibindoAdotados]="exibindoAdotados"
+    (carregarDisponiveis)="carregarDisponiveis()"
+    (carregarAdotados)="carregarAdotados()"
+    (buscarCidade)="buscarPorCidade($event)"
+    (buscarId)="buscarPorId($event)"
+    (limparFiltros)="carregarDisponiveis()">
+  </app-pet-filtros>
 
-        @if (mensagemErro) {
-          <p class="alert error" style="margin-bottom: 15px;">{{ mensagemErro }}</p>
-        }
+  <!-- Tabela -->
+  <app-pet-tabela
+    [pets]="pets"
+    [carregando]="carregando"
+    [exibindoAdotados]="exibindoAdotados"
+    [paginaAtual]="paginaAtual"
+    [totalPaginas]="totalPaginas"
+    (verDetalhes)="abrirModalDetalhes($event)"
+    (adotar)="petSelecionadoAdocao = $event; exibirModalAdocao = true"
+    (editar)="abrirModalEditarPet($event)"
+    (remover)="deletarPet($event)"
+    (mudarPagina)="paginaAtual = $event; atualizarLista()">
+  </app-pet-tabela>
 
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-          <label>Nome:</label>
-          <input type="text" [(ngModel)]="petForm.nome" placeholder="Nome" />
-
-          <label>Tipo (Não editável):</label>
-          <input type="text" [value]="petForm.tipo" disabled style="background-color: #e9ecef; cursor: not-allowed;" />
-
-          <label>Sexo (Não editável):</label>
-          <input type="text" [value]="petForm.sexo" disabled style="background-color: #e9ecef; cursor: not-allowed;" />
-
-          <label>Raça:</label>
-          <input type="text" [(ngModel)]="petForm.raca" placeholder="Raça (ex: SRD)" />
-
-          <label>Data de Nascimento:</label>
-          <input type="date" [(ngModel)]="petForm.dataNascimento" />
-
-          <label>Peso (kg):</label>
-          <input type="number" step="0.1" [(ngModel)]="petForm.peso" placeholder="Peso" />
-
-          <label>Logradouro (Apenas letras):</label>
-          <input type="text" [(ngModel)]="petForm.endereco.logradouro" placeholder="Rua / Avenida" />
-
-          <label>Número:</label>
-          <input type="text" [(ngModel)]="petForm.endereco.numero" placeholder="Número ou S/N" />
-
-          <label>Cidade:</label>
-          <input type="text" [(ngModel)]="petForm.endereco.cidade" placeholder="Cidade" />
-        </div>
-
-        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-          <button class="btn-secondary" (click)="fecharModal()">Cancelar</button>
-          <button class="btn-primary" (click)="confirmarAtualizacao()">Salvar Alterações</button>
-        </div>
-      </div>
-    </div>
+  <!-- Modais -->
+  @if (exibirModalDetalhes) {
+    <app-modal-detalhes
+      [pet]="petSelecionadoDetalhes"
+      [tutor]="tutorDetalhes"
+      [exibindoAdotados]="exibindoAdotados"
+      (fechar)="exibirModalDetalhes = false">
+    </app-modal-detalhes>
   }
 
-  <!-- Modal de Cadastro -->
-  @if (exibirModalCadastro) {
-    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
-      <div style="background: white; padding: 25px; border-radius: 8px; width: 400px; max-width: 90%; max-height: 90vh; overflow-y: auto;">
-        <h3>Cadastrar Novo Pet</h3>
+  <app-modal-edicao-cadastro
+    [exibirModal]="exibirModalEdicaoCadastro"
+    [pet]="petSelecionadoEdicao"
+    [mensagemErro]="mensagemErro"
+    (salvar)="salvarPet($event)"
+    (fechar)="fecharModalEdicaoCadastro()">
+  </app-modal-edicao-cadastro>
 
-        @if (mensagemErro) {
-          <p class="alert error" style="margin-bottom: 15px;">{{ mensagemErro }}</p>
-        }
-
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-          <label>Nome:</label>
-          <input type="text" [(ngModel)]="novoPetForm.nome" placeholder="Ex: Bob" />
-
-          <label>Tipo:</label>
-          <select [(ngModel)]="novoPetForm.tipo">
-            <option value="CACHORRO">Cachorro</option>
-            <option value="GATO">Gato</option>
-          </select>
-
-          <label>Sexo:</label>
-          <select [(ngModel)]="novoPetForm.sexo">
-            <option value="MACHO">Macho</option>
-            <option value="FEMEA">Fêmea</option>
-          </select>
-
-          <label>Raça:</label>
-          <input type="text" [(ngModel)]="novoPetForm.raca" placeholder="Ex: SRD ou Labrador" />
-
-          <label>Data de Nascimento:</label>
-          <input type="date" [(ngModel)]="novoPetForm.dataNascimento" />
-
-          <label>Peso (kg):</label>
-          <input type="number" step="0.1" [(ngModel)]="novoPetForm.peso" placeholder="Ex: 5.2" />
-
-          <label>Logradouro (Apenas letras):</label>
-          <input type="text" [(ngModel)]="novoPetForm.endereco.logradouro" placeholder="Rua / Avenida" />
-
-          <label>Número:</label>
-          <input type="text" [(ngModel)]="novoPetForm.endereco.numero" placeholder="Número ou S/N" />
-
-          <label>Cidade:</label>
-          <input type="text" [(ngModel)]="novoPetForm.endereco.cidade" placeholder="Cidade" />
-        </div>
-
-        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-          <button class="btn-secondary" (click)="fecharModalCadastro()">Cancelar</button>
-          <button class="btn-primary" (click)="cadastrarPet()">Cadastrar</button>
-        </div>
-      </div>
-    </div>
+  @if (exibirModalAdocao && petSelecionadoAdocao) {
+    <app-modal-adocao
+      [pet]="petSelecionadoAdocao"
+      (confirmar)="adotarPet($event)"
+      (fechar)="exibirModalAdocao = false">
+    </app-modal-adocao>
   }
+
 </div>

@@ -1,179 +1,193 @@
-<div class="container">
-  <header class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <h2>Gerenciamento de Adotantes</h2>
-    <div style="display: flex; gap: 10px;">
-      <button class="btn-primary" (click)="abrirModalCadastro()">+ Novo Adotante</button>
-      <button class="btn-secondary" routerLink="/home">← Voltar ao Home</button>
-    </div>
+<div class="min-h-screen w-full bg-slate-50 font-sans text-slate-900 p-6 md:p-8">
+  <header class="mb-8">
+    <h1 class="text-3xl font-bold tracking-tight text-slate-800">Adotantes</h1>
+    <p class="text-sm text-slate-500 mt-1">Gerencie os cadastros das pessoas interessadas em adotar.</p>
   </header>
 
-  <!-- Filtro por ID -->
-  <div class="filters-card" style="margin-bottom: 20px;">
-    <div class="filter-group">
-      <label>Buscar por ID:</label>
-      <div class="input-action" style="display: flex; gap: 10px;">
-        <input type="number" [(ngModel)]="termoId" placeholder="Ex: 1" style="padding: 6px;" />
-        <button class="btn-primary" (click)="buscarPorId()">Buscar</button>
-        <button class="btn-secondary" (click)="carregarAdotantes(0)">Limpar Filtro</button>
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+
+    <!-- Filtros (Estilo botões arredondados e inputs limpos) -->
+    <div class="flex items-center gap-3 w-full md:w-auto">
+      <div class="relative flex items-center bg-white rounded-full shadow-sm border border-slate-100 px-4 py-2 w-full md:w-72">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 mr-2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input
+          type="number"
+          [(ngModel)]="termoId"
+          (keyup.enter)="buscarPorId()"
+          placeholder="Buscar por ID..."
+          class="bg-transparent border-none outline-none text-sm w-full text-slate-700 placeholder:text-slate-400"
+        />
       </div>
+      <button (click)="carregarAdotantes(0)" class="bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 rounded-full px-4 py-2 text-sm font-medium shadow-sm transition-colors whitespace-nowrap">
+        Limpar
+      </button>
     </div>
+
+    <!-- Botão de Ação Primária (+ Novo) -->
+    <button (click)="abrirModalCadastro()" class="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-yellow-950 font-medium px-5 py-2.5 rounded-full shadow-sm transition-colors w-full md:w-auto justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      Novo Adotante
+    </button>
   </div>
 
-  <!-- Mensagens do sistema -->
-  @if (carregando) { <p class="loading">Carregando dados...</p> }
-  @if (mensagemErro) { <p class="alert error" style="color: red; font-weight: bold;">{{ mensagemErro }}</p> }
-  @if (mensagemSucesso) { <p class="alert success" style="color: green; font-weight: bold;">{{ mensagemSucesso }}</p> }
+  <!-- Mensagens Globais -->
+  @if (carregando) { <p class="text-sm text-slate-500 mb-4 animate-pulse">Carregando dados...</p> }
+  @if (mensagemErro) { <p class="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg mb-4 border border-red-100">{{ mensagemErro }}</p> }
+  @if (mensagemSucesso) { <p class="text-sm text-emerald-600 bg-emerald-50 px-4 py-2 rounded-lg mb-4 border border-emerald-100">{{ mensagemSucesso }}</p> }
 
-  <!-- Tabela de Listagem -->
+
   @if (!carregando) {
-    <table class="table" style="width: 100%; border-collapse: collapse;">
-      <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nome</th>
-        <th>CPF</th>
-        <th>Contato</th>
-        <th>Cidade</th>
-        <th>Ações</th>
-      </tr>
-      </thead>
-      <tbody>
-        @for (a of adotantes; track a.id) {
-          <tr>
-            <td>#{{ a.id }}</td>
-            <td>{{ a.nome }}</td>
-            <td>{{ a.cpf }}</td>
-            <td>
-              {{ a.telefone }}<br />
-              <small>{{ a.email }}</small>
-            </td>
-            <td>{{ a.endereco?.cidade || 'N/A' }}</td>
-            <td>
-              <div style="display: flex; gap: 5px;">
-                <button class="btn-primary" (click)="abrirModalEdicao(a)">Editar</button>
-                <button class="btn-danger" (click)="deletar(a.id)">Remover</button>
-              </div>
-            </td>
+    <div class="bg-white rounded-3xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+          <tr class="border-b border-slate-100 bg-white">
+            <th class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">ID</th>
+            <th class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Nome</th>
+            <th class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">CPF</th>
+            <th class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Contato</th>
+            <th class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Cidade</th>
+            <th class="px-6 py-4 text-xs font-semibold text-slate-400 uppercase tracking-wider text-right">Ações</th>
           </tr>
-        } @empty {
-          <tr>
-            <td colspan="6" style="text-align: center; padding: 15px;">Nenhum adotante encontrado.</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-    <!-- Controles de Paginação -->
-    @if (totalPaginas > 1) {
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
-        <small>
-          Exibindo página <strong>{{ paginaAtual + 1 }}</strong> de <strong>{{ totalPaginas }}</strong>
-          (Total: {{ totalElementos }} registros)
-        </small>
-
-        <div style="display: flex; gap: 5px;">
-          <button (click)="paginaAnterior()" [disabled]="paginaAtual === 0">&laquo; Anterior</button>
-
-          @for (p of [].constructor(totalPaginas); track $index) {
-            <button
-              (click)="irParaPagina($index)"
-              [style.font-weight]="$index === paginaAtual ? 'bold' : 'normal'"
-              [style.background-color]="$index === paginaAtual ? '#ddd' : ''">
-              {{ $index + 1 }}
-            </button>
-          }
-
-          <button (click)="proximaPagina()" [disabled]="paginaAtual >= totalPaginas - 1">Próximo &raquo;</button>
-        </div>
+          </thead>
+          <tbody class="divide-y divide-slate-50">
+            @for (a of adotantes; track a.id) {
+              <tr class="hover:bg-yellow-50/50 transition-colors group">
+                <td class="px-6 py-4 text-sm font-medium text-slate-500">#{{ a.id }}</td>
+                <td class="px-6 py-4 text-sm font-semibold text-slate-800">{{ a.nome }}</td>
+                <td class="px-6 py-4 text-sm text-slate-500">{{ a.cpf }}</td>
+                <td class="px-6 py-4 text-sm text-slate-600">
+                  {{ a.telefone }}<br />
+                  <span class="text-xs text-slate-400">{{ a.email }}</span>
+                </td>
+                <td class="px-6 py-4 text-sm text-slate-600">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-50 border border-slate-100 text-slate-600">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                    {{ a.endereco?.cidade || 'N/A' }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <div class="flex justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                    <!-- Botão Editar -->
+                    <button (click)="abrirModalEdicao(a)" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Editar">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                    </button>
+                    <!-- Botão Remover -->
+                    <button (click)="deletar(a.id)" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Remover">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="px-6 py-12 text-center text-sm text-slate-400">Nenhum adotante encontrado com estes filtros.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
-    }
+
+      <!-- Controles de Paginação -->
+      @if (totalPaginas > 1) {
+        <div class="flex justify-between items-center px-6 py-4 bg-slate-50/50 border-t border-slate-100">
+          <span class="text-xs text-slate-500 font-medium">
+            Página {{ paginaAtual + 1 }} de {{ totalPaginas }} <span class="hidden sm:inline">({{ totalElementos }} registros)</span>
+          </span>
+
+          <div class="flex items-center gap-1">
+            <button (click)="paginaAnterior()" [disabled]="paginaAtual === 0" class="p-1.5 rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+
+            <div class="hidden sm:flex gap-1 mx-2">
+              @for (p of [].constructor(totalPaginas); track $index) {
+                <button
+                  (click)="irParaPagina($index)"
+                  class="w-8 h-8 rounded-md text-xs font-medium transition-colors"
+                  [ngClass]="{
+                    'bg-slate-800 text-white shadow-sm': $index === paginaAtual,
+                    'text-slate-600 hover:bg-slate-100': $index !== paginaAtual
+                  }">
+                  {{ $index + 1 }}
+                </button>
+              }
+            </div>
+
+            <button (click)="proximaPagina()" [disabled]="paginaAtual >= totalPaginas - 1" class="p-1.5 rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
   }
 
-  <!-- Modal de Cadastro / Edição -->
+  <!-- ========================================== -->
+  <!-- MODAL DE CADASTRO / EDIÇÃO                 -->
+  <!-- ========================================== -->
   @if (exibirModalEdicao) {
-    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
-      <div style="background: white; padding: 25px; border-radius: 8px; width: 400px; max-width: 90%; max-height: 90vh; overflow-y: auto;">
-        <h3>{{ idEmEdicao ? 'Editar Adotante #' + idEmEdicao : 'Cadastrar Novo Adotante' }}</h3>
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+      <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
-        <form [formGroup]="form" (ngSubmit)="salvarAdotante()">
-          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+        <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <h3 class="text-lg font-semibold text-slate-800">{{ idEmEdicao ? 'Editar Adotante #' + idEmEdicao : 'Novo Adotante' }}</h3>
+          <button (click)="fecharModal()" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-1.5 rounded-full transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="salvarAdotante()" class="p-6 max-h-[75vh] overflow-y-auto">
+          <div class="space-y-4">
+            <!-- Campos do Formulário com visual limpo -->
             <div>
-              <label>Nome Completo:</label>
-              <input type="text" formControlName="nome" placeholder="Nome completo" style="width: 100%; box-sizing: border-box;" />
-              @if (form.get('nome')?.touched && form.get('nome')?.invalid) {
-                <small style="color: red;">Informe nome e sobrenome válidos.</small>
-              }
+              <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Nome Completo</label>
+              <input type="text" formControlName="nome" placeholder="Ex: João da Silva" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-all text-sm text-slate-800" />
             </div>
 
-            <div>
-              <label>CPF {{ idEmEdicao ? '(Não editável)' : '' }}:</label>
-              <input
-                type="text"
-                formControlName="cpf"
-                placeholder="000.000.000-00"
-                style="width: 100%; box-sizing: border-box;"
-                [style.background-color]="idEmEdicao ? '#e9ecef' : '#fff'"
-                [style.cursor]="idEmEdicao ? 'not-allowed' : 'text'"
-              />
-              @if (form.get('cpf')?.touched && form.get('cpf')?.invalid) {
-                <small style="color: red;">Informe um CPF válido.</small>
-              }
-            </div>
-
-            <div>
-              <label>Telefone:</label>
-              <input
-                type="text"
-                formControlName="telefone"
-                placeholder="(84) 98866-5779"
-                maxlength="15"
-                (input)="aplicarMascaraTelefone($event)"
-                style="width: 100%; box-sizing: border-box;"
-              />
-              @if (form.get('telefone')?.touched && form.get('telefone')?.invalid) {
-                <small style="color: red;">Informe um telefone válido com DDD.</small>
-              }
-            </div>
-
-            <div>
-              <label>E-mail:</label>
-              <input type="email" formControlName="email" placeholder="E-mail válido" style="width: 100%; box-sizing: border-box;" />
-              @if (form.get('email')?.touched && form.get('email')?.invalid) {
-                <small style="color: red;">Informe um e-mail válido.</small>
-              }
-            </div>
-
-            <div formGroupName="endereco" style="border: 1px solid #ddd; padding: 10px; border-radius: 6px; background-color: #f9f9f9; display: flex; flex-direction: column; gap: 8px;">
-              <strong>Endereço</strong>
-
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label>Logradouro:</label>
-                <input type="text" formControlName="logradouro" placeholder="Rua / Avenida" style="width: 100%; box-sizing: border-box;" />
-                @if (form.get('endereco.logradouro')?.touched && form.get('endereco.logradouro')?.invalid) {
-                  <small style="color: red;">Logradouro inválido.</small>
-                }
+                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">CPF</label>
+                <input type="text" formControlName="cpf" placeholder="000.000.000-00"
+                       class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-all text-sm text-slate-800 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed" />
               </div>
-
               <div>
-                <label>Número:</label>
-                <input type="text" formControlName="numero" placeholder="Ex: 123 ou S/N" style="width: 100%; box-sizing: border-box;" />
-                @if (form.get('endereco.numero')?.touched && form.get('endereco.numero')?.invalid) {
-                  <small style="color: red;">Número inválido.</small>
-                }
+                <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">Telefone</label>
+                <input type="text" formControlName="telefone" (input)="aplicarMascaraTelefone($event)" maxlength="15" placeholder="(00) 00000-0000" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-all text-sm text-slate-800" />
               </div>
+            </div>
 
-              <div>
-                <label>Cidade:</label>
-                <input type="text" formControlName="cidade" placeholder="Cidade" style="width: 100%; box-sizing: border-box;" />
-                @if (form.get('endereco.cidade')?.touched && form.get('endereco.cidade')?.invalid) {
-                  <small style="color: red;">Cidade inválida.</small>
-                }
+            <div>
+              <label class="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">E-mail</label>
+              <input type="email" formControlName="email" placeholder="email@exemplo.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-all text-sm text-slate-800" />
+            </div>
+
+            <div formGroupName="endereco" class="bg-slate-50 rounded-2xl p-4 border border-slate-100 mt-2">
+              <span class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-3">Endereço</span>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-xs font-medium text-slate-500 mb-1">Logradouro</label>
+                  <input type="text" formControlName="logradouro" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none text-sm bg-white" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Número</label>
+                    <input type="text" formControlName="numero" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none text-sm bg-white" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Cidade</label>
+                    <input type="text" formControlName="cidade" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none text-sm bg-white" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-            <button type="button" class="btn-secondary" (click)="fecharModal()">Cancelar</button>
-            <button type="submit" class="btn-primary">{{ idEmEdicao ? 'Salvar Alterações' : 'Cadastrar' }}</button>
+          <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <button type="button" (click)="fecharModal()" class="px-5 py-2.5 rounded-full text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">Cancelar</button>
+            <button type="submit" class="px-6 py-2.5 rounded-full text-sm font-medium bg-slate-800 hover:bg-slate-900 text-white shadow-sm transition-colors">
+              {{ idEmEdicao ? 'Salvar Alterações' : 'Cadastrar Adotante' }}
+            </button>
           </div>
         </form>
       </div>

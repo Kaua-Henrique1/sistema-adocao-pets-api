@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { PetService } from '../../services/pet';
 import { AdotanteService } from '../../services/adotante';
@@ -51,6 +51,13 @@ export class Home implements OnInit {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  fazerLogout(): void {
+    if (confirm('Deseja realmente sair do sistema?')) {
+      localStorage.removeItem('token');
+      this.router.navigate(['/login']);
+    }
   }
 
   navegarPara(rota: string): void {

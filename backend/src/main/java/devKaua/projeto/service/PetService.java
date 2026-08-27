@@ -72,6 +72,18 @@ public class PetService {
 
         pet.setTutor(adotante);
 
+        if (adotante.getEndereco() != null) {
+            Endereco enderecoTutor = adotante.getEndereco();
+
+            Endereco novoEnderecoPet = Endereco.builder()
+                    .logradouro(enderecoTutor.getLogradouro())
+                    .numero(enderecoTutor.getNumero())
+                    .cidade(enderecoTutor.getCidade())
+                    .build();
+
+            pet.setEndereco(novoEnderecoPet);
+        }
+
         Pet petAdotado = petRepository.save(pet);
         return petMapper.toDTO(petAdotado);
     }

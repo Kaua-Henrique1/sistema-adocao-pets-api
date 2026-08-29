@@ -1,10 +1,20 @@
 # Sistema de Gestão ONG Pets
 
 > **Nota:** Este é um projeto desenvolvido exclusivamente para fins de estudo e aprendizado prático de desenvolvimento de software.
+> 
+> **Clique aqui para ver a [Demonstração Visual da Aplicação](./docs/demonstracao_site.md).**
 
 Uma plataforma desenvolvida para **centralizar e otimizar o gerenciamento de ONGs de proteção animal**.
 
 O sistema facilita o controle de animais resgatados, a gestão de tutores interessados em adoção e o acompanhamento de métricas da instituição, oferecendo uma **interface administrativa**.
+
+
+## Acesso e Autenticação
+
+Para acessar a aplicação web ou testar as requisições autenticadas na API, utilize as credenciais padrão pré-configuradas:
+
+* **E-mail (Login):** `admin@email.com`
+* **Senha:** `senha123SuperSegura`
 
 ---
 
@@ -22,22 +32,23 @@ O sistema facilita o controle de animais resgatados, a gestão de tutores intere
 
 ---
 
-## Tecnologias Utilizadas
+## 🛠️ Tecnologias e Arquitetura
 
-### Frontend
+### **Backend**
+* **Java:** 17
+* **Spring Boot:** 3.3.5
+* **Segurança & Autenticação:** Spring Security + Java-JWT (`com.auth0:java-jwt` v4.4.0)
+* **Persistência de Dados:** Spring Data JPA + Driver PostgreSQL
+* **Gerenciamento de Migrations:** Flyway (`flyway-core` + `flyway-database-postgresql`)
+* **Documentação de API:** SpringDoc OpenAPI / Swagger UI (v2.6.0)
+* **Validação de Dados:** Spring Boot Starter Validation (`Hibernate Validator`)
+* **Banco de Dados de Testes:** H2 Database (em memória para testes unitários/integração)
+* **Utilitários:** Lombok
 
-* **Angular 18+**
-* **Tailwind CSS**
-
-### Backend
-
-* **Java 21**
-* **OpenJDK Temurin LTS**
-* **Spring Boot 3.x**
-
-### Banco de Dados
-
-* **PostgreSQL 16.14**
+### **Frontend**
+* **Framework:** Angular 18+ (Utilizando o novo construtor `@angular/build:application`)
+* **Estilização:** Tailwind CSS + Angular Material (`src/material-theme.scss`)
+* **Gerenciador de Pacotes:** npm
 
 ### Servidor Web & Build
 
@@ -91,16 +102,16 @@ docker compose up -d --build
 
 ---
 
-## Acessando a Aplicação
+## 🌐 Acessando a Aplicação
 
 Após os containers iniciarem com sucesso, os serviços estarão disponíveis nos seguintes endereços:
 
-| Serviço              | Endereço                |  Porta |
-| -------------------- | ----------------------- | -----: |
-| 🌐 **Frontend**      | `http://localhost`      |   `80` |
+| Serviço | Endereço | Porta |
+|---|---|---:|
+| 🌐 **Frontend** | `http://localhost` | `80` |
 | ⚙️ **Backend / API** | `http://localhost:8080` | `8080` |
-| 🗄️ **PostgreSQL**   | `localhost`             | `5432` |
-
+| 📚 **Documentação Swagger (API)** | `http://localhost:8080/swagger-ui.html` | `8080` |
+| 🗄️ **PostgreSQL** | `localhost` | `5432` |
 ---
 
 ## Parando a Aplicação

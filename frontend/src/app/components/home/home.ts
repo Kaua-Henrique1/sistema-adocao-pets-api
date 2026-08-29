@@ -40,8 +40,6 @@ export class Home implements OnInit {
       next: ({ pets, adotantes }: any) => {
         this.stats.totalPets = pets?.totalElements ?? 0;
         this.stats.totalAdotantes = adotantes?.totalElements ?? 0;
-        this.stats.adocoesMes = 0;
-
         this.carregando = false;
         this.cdr.detectChanges();
       },

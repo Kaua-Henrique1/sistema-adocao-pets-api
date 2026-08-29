@@ -1,10 +1,12 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { AdotanteService } from '../../services/adotante';
-import { AdotanteRequest, AdotanteResponse } from '../../models/domain.model';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs/operators';
+import { HttpClient, HttpBackend } from '@angular/common/http';
+
+import { AdotanteService } from '../../services/adotante';
+import { AdotanteRequest, AdotanteResponse } from '../../models/domain.model';
 
 @Component({
   selector: 'app-pessoas',
@@ -14,15 +16,18 @@ import { finalize } from 'rxjs/operators';
   styleUrls: ['./pessoas.css'],
 })
 export class Pessoas implements OnInit {
+  private httpBackend = inject(HttpBackend);
+  private httpExterno = new HttpClient(this.httpBackend);
   private fb = inject(FormBuilder);
-  private adotanteService = inject(AdotanteService);
-  private cdr = inject(ChangeDetectorRef);
 
+  private adotanteService = inject(AdotanteService);
+
+  private cdr = inject(ChangeDetectorRef);
   adotantes: AdotanteResponse[] = [];
   carregando = false;
   mensagemSucesso = '';
   mensagemErro = '';
-
+  buscandoCep = false;
   termoId: number | null = null;
   idEmEdicao: number | null = null;
   exibirModalEdicao = false;
@@ -38,6 +43,7 @@ export class Pessoas implements OnInit {
     telefone: ['', [Validators.required, Validators.pattern(/^\(\d{2}\)\s\d{4,5}-\d{4}$/)]],
     email: ['', [Validators.required, Validators.email]],
     endereco: this.fb.group({
+      cep: [''],
       logradouro: ['', [Validators.required, Validators.pattern(/^[A-Za-zÀ-ÿ\s.,'-]+$/)]],
       numero: ['', [Validators.required, Validators.pattern(/^(S\/N|\d+[A-Za-z]?)$/i)]],
       cidade: ['', [Validators.required, Validators.pattern(/^[A-Za-zÀ-ÿ\s'-]+$/)]],
@@ -159,6 +165,7 @@ export class Pessoas implements OnInit {
       telefone: telFormatado,
       email: adotante.email,
       endereco: {
+        cep: adotante.endereco?.cep || '',
         logradouro: adotante.endereco?.logradouro || '',
         numero: adotante.endereco?.numero || '',
         cidade: adotante.endereco?.cidade || '',
@@ -180,6 +187,41 @@ export class Pessoas implements OnInit {
 
   private apenasNumeros(valor: string | undefined | null): string {
     return valor ? valor.replace(/\D/g, '') : '';
+  }
+
+  aoBuscarCep(): void {
+    const rawValue = this.form.get('endereco.cep')?.value || '';
+    const cepApenasNumeros = String(rawValue).replace(/\D/g, '');
+
+    if (cepApenasNumeros.length !== 8) return;
+
+    this.buscandoCep = true;
+
+    this.httpExterno.get<any>(`https://viacep.com.br/ws/${cepApenasNumeros}/json/`).subscribe({
+      next: (dados: any) => {
+        this.buscandoCep = false;
+
+        if (!dados.erro) {
+          this.form.patchValue({
+            endereco: {
+              logradouro: dados.logradouro || '',
+              cidade: dados.localidade || '',
+            },
+          } as any);
+
+          setTimeout(() => {
+            const numeroInput = document.getElementById('numero') as HTMLInputElement;
+            numeroInput?.focus();
+          }, 50);
+        } else {
+          alert('CEP não encontrado. Por favor, verifique o número.');
+        }
+      },
+      error: () => {
+        this.buscandoCep = false;
+        alert('Não foi possível consultar o CEP no momento.');
+      },
+    });
   }
 
   salvarAdotante(): void {
@@ -209,7 +251,7 @@ export class Pessoas implements OnInit {
         finalize(() => {
           this.carregando = false;
           this.cdr.detectChanges();
-        })
+        }),
       )
       .subscribe({
         next: () => {

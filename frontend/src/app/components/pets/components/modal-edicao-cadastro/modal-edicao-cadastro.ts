@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, ViewChild, ElementRef, inject, } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpBackend, HttpClient } from '@angular/common/http';
 import { PetResponse, PetRequest } from '../../../../models/domain.model';
 
 @Component({
@@ -19,8 +20,12 @@ export class ModalEdicaoCadastro implements OnChanges {
 
   @ViewChild('formContainer', { read: ElementRef }) formContainer?: ElementRef<HTMLElement>;
 
-  formData: PetRequest = this.getFormVazio();
+  private httpBackend = inject(HttpBackend);
+  private httpExterno = new HttpClient(this.httpBackend);
+
+  formData: any = this.getFormVazio();
   avisosAjustes: string[] = [];
+  buscandoCep = false;
 
   get isEdicao(): boolean {
     return !!this.pet?.id;
@@ -40,6 +45,7 @@ export class ModalEdicaoCadastro implements OnChanges {
             : '',
           peso: this.pet.peso || 0,
           endereco: {
+            cep: (this.pet.endereco as any)?.cep || '',
             logradouro: this.pet.endereco?.logradouro || '',
             numero: this.pet.endereco?.numero || '',
             cidade: this.pet.endereco?.cidade || '',
@@ -55,7 +61,7 @@ export class ModalEdicaoCadastro implements OnChanges {
     }
   }
 
-  private getFormVazio(): PetRequest {
+  private getFormVazio(): any {
     return {
       nome: '',
       tipo: 'CACHORRO',
@@ -64,6 +70,7 @@ export class ModalEdicaoCadastro implements OnChanges {
       dataNascimento: new Date().toISOString().split('T')[0],
       peso: 0.5,
       endereco: {
+        cep: '',
         logradouro: '',
         numero: '',
         cidade: '',
@@ -71,82 +78,100 @@ export class ModalEdicaoCadastro implements OnChanges {
     };
   }
 
+  buscarCep(): void {
+    const rawValue = this.formData.endereco?.cep || '';
+    const cepApenasNumeros = String(rawValue).replace(/\D/g, '');
+
+    if (cepApenasNumeros.length !== 8) return;
+
+    this.buscandoCep = true;
+
+    this.httpExterno.get<any>(`https://viacep.com.br/ws/${cepApenasNumeros}/json/`).subscribe({
+      next: (dados: any) => {
+        this.buscandoCep = false;
+        if (!dados.erro) {
+          this.formData.endereco.logradouro = dados.logradouro || '';
+          this.formData.endereco.cidade = dados.localidade || '';
+
+          setTimeout(() => {
+            const numeroInput = document.getElementById('numeroPet') as HTMLInputElement;
+            numeroInput?.focus();
+          }, 50);
+        } else {
+          alert('CEP não encontrado. Por favor, verifique o número.');
+        }
+      },
+      error: () => {
+        this.buscandoCep = false;
+        alert('Não foi possível consultar o CEP no momento.');
+      },
+    });
+  }
+
   onSalvar(): void {
     this.avisosAjustes = [];
     let houveAjusteAutomatico = false;
 
-    // 1. Tratamento do NOME: Remove números e símbolos
     const nomeOriginal = this.formData.nome || '';
     const nomeTratado = nomeOriginal
       .replace(/[^a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ\s-]/g, '')
       .trim();
-
     if (nomeOriginal !== nomeTratado) {
       this.avisosAjustes.push('Números e símbolos inválidos foram removidos do Nome.');
       houveAjusteAutomatico = true;
     }
 
-    // 2. Tratamento do PESO: Garante valor positivo/válido
     const pesoOriginal = Number(this.formData.peso);
     let pesoTratado = pesoOriginal;
-
     if (isNaN(pesoOriginal) || pesoOriginal <= 0) {
-      pesoTratado = 0.1; // Valor mínimo seguro
+      pesoTratado = 0.1;
       this.avisosAjustes.push('O peso informado era inválido e foi ajustado para o valor mínimo.');
       houveAjusteAutomatico = true;
     }
 
-    // 3. Tratamento do LOGRADOURO: Remove parênteses
     const logradouroOriginal = this.formData.endereco?.logradouro || '';
     const logradouroTratado = logradouroOriginal.replace(/[()]/g, '').trim();
-
     if (logradouroOriginal !== logradouroTratado) {
       this.avisosAjustes.push('Parênteses foram removidos do logradouro para melhor legibilidade.');
       houveAjusteAutomatico = true;
     }
 
-    // 4. Tratamento da CIDADE: Remove números e símbolos
     const cidadeOriginal = this.formData.endereco?.cidade || '';
     const cidadeTratada = cidadeOriginal
       .replace(/[^a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ\s-]/g, '')
       .trim();
-
     if (cidadeOriginal && cidadeOriginal !== cidadeTratada) {
       this.avisosAjustes.push('Números e símbolos foram removidos do campo Cidade.');
       houveAjusteAutomatico = true;
     }
 
-    // 5. Tratamento da RAÇA: Remove números e símbolos
     const racaOriginal = this.formData.raca || '';
     const racaTratada = racaOriginal
       .replace(/[^a-zA-ZáàâãéèêíïóôõöúçñÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇÑ\s-]/g, '')
       .trim();
-
     if (racaOriginal && racaOriginal !== racaTratada) {
       this.avisosAjustes.push('Símbolos e números foram removidos do campo Raça.');
       houveAjusteAutomatico = true;
     }
 
-    // Atualiza os valores limpos no formulário atual
     this.formData.nome = nomeTratado;
     this.formData.peso = pesoTratado;
     this.formData.endereco.logradouro = logradouroTratado;
     this.formData.endereco.cidade = cidadeTratada;
     this.formData.raca = racaTratada;
 
-    // Se houve qualquer ajuste automático, faz o scroll e suspende o salvamento no 1º clique
     if (houveAjusteAutomatico) {
       this.scrollToTop();
       return;
     }
 
-    // Emissão do payload limpo para o backend
     const payload: PetRequest = {
       ...this.formData,
       nome: nomeTratado,
       raca: racaTratada,
       peso: pesoTratado,
       endereco: {
+        cep: this.formData.endereco?.cep?.trim() || '',
         logradouro: logradouroTratado,
         numero: this.formData.endereco?.numero?.trim() || '',
         cidade: cidadeTratada,

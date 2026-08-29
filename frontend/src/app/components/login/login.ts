@@ -15,15 +15,19 @@ export class Login {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
-
   errorMessage: string | null = null;
   isLoading = false;
+  mostrarSenha = false;
 
   loginForm: FormGroup = this.fb.group({
     login: ['', [Validators.required]],
     senha: ['', [Validators.required, Validators.minLength(6)]],
   });
 
+  alternarMostrarSenha(): void {
+    this.mostrarSenha = !this.mostrarSenha;
+  }
+  
   onSubmit(): void {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();

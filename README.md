@@ -92,10 +92,17 @@ cd sistema-adocao-pets-api
 
 ---
 
-### 3. Construa as Imagens e Inicie os Containers
+### 3. Configure as Variáveis de Ambiente
+Crie o arquivo .env na raiz do projeto copiando o modelo de exemplo fornecido:
+```bash
+cp .env.example .env
+docker compose up -d --build
+```
 
+> **Nota**: Se necessário, abra o arquivo .env gerado e ajuste as portas, senhas do banco de dados ou a chave secreta (JWT_SECRET) conforme a sua preferência.
+
+### 4. Construa as Imagens e Inicie os Containers
 Execute o comando abaixo para construir as imagens e iniciar os containers em segundo plano:
-
 ```bash
 docker compose up -d --build
 ```
